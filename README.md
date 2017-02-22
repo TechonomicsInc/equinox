@@ -1,0 +1,1 @@
+A wrapper around [bwmarrin/discordgo](https://github.com/bwmarrin/discordgo) for easier caching
