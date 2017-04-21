@@ -8,7 +8,7 @@ import (
 
 func IgnorePrivateMessages(args ...*wormhole.Wormhole) equinox.AdapterEvent {
     input := args[0].AsBox().(*slack.MessageEvent)
-    session := equinox.GetSession().AsBox().(*slack.RTM)
+    session := equinox.GetSession().(*slack.RTM)
 
     channel, err := session.GetChannelInfo(input.Channel)
     if err != nil {
