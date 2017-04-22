@@ -7,39 +7,10 @@ import (
     "regexp"
     "runtime"
     "strings"
-    "sync"
     "time"
 )
 
-type Handler interface {
-    Init(session *wormhole.Wormhole)
-
-    Listeners() []*Listener
-
-    Action(
-        command string,
-        content string,
-        params map[string]string,
-        msg *wormhole.Wormhole,
-    )
-}
-
-type Listener struct {
-    IsRegexp bool
-    Content  interface{}
-}
-
-type Router struct {
-    sync.RWMutex
-
-    lastResort    POGOFunc
-    prefixHandler PrefixHandler
-    panicHandler  PanicHandler
-
-    EventHandlers map[Event][]AdapterFunc
-    Routes        map[*Listener][]*Handler
-}
-
+// NewRouter constructs a router object with some default adapters
 func NewRouter() *Router {
     r := &Router{}
 
@@ -49,11 +20,12 @@ func NewRouter() *Router {
     r.Unlock()
 
     r.SetPanicHandler(DefaultPanicHandler)
-    r.RegisterAdapter(MESSAGE_PRE_ANALYZE, PrefixAdapter)
+    r.RegisterAdapter(MESSAGE_PRE_ANALYZE, DefaultPrefixAdapter)
 
     return r
 }
 
+// AddRoute calls the handler's Init() and addss it's listeners to the routing table
 func (r *Router) AddRoute(handler *Handler) {
     r.Lock()
     defer r.Unlock()
@@ -69,8 +41,11 @@ func (r *Router) AddRoute(handler *Handler) {
             ))
         }
     }
+
+    (*handler).Init()
 }
 
+// AddRoutes is syntactic sugar for a loop that calls AddRoute() multiple times.
 func (r *Router) AddRoutes(handlers []Handler) {
     for _, h := range handlers {
         r.AddRoute(&h)

@@ -11,6 +11,7 @@ var (
     sessionMutex sync.RWMutex
 )
 
+// SetSession saves a session in equinox
 func SetSession(session *wormhole.Wormhole) {
     sessionMutex.Lock()
     defer sessionMutex.Unlock()
@@ -18,6 +19,7 @@ func SetSession(session *wormhole.Wormhole) {
     sessionCache = session
 }
 
+// GetSession retrieves the session from equinox
 func GetSession() interface{} {
     sessionMutex.RLock()
     defer sessionMutex.RUnlock()
