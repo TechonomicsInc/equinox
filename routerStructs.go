@@ -31,9 +31,10 @@ type Listener struct {
 type Router struct {
     sync.RWMutex
 
-    lastResort    POGOFunc
-    prefixHandler PrefixHandler
-    panicHandler  PanicHandler
+    lastResort        POGOFunc
+    prefixHandler     PrefixHandler
+    panicHandler      PanicHandler
+    parseErrorHandler ParseErrorHandler
 
     EventHandlers map[Event][]AdapterFunc
     Routes        map[*Listener][]*Handler
