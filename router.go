@@ -48,6 +48,7 @@ func NewRouter() *Router {
     r.Routes = make(map[*Listener][]*Handler)
     r.Unlock()
 
+    r.SetPanicHandler(DefaultPanicHandler)
     r.RegisterAdapter(MESSAGE_PRE_ANALYZE, PrefixAdapter)
 
     return r
