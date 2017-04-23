@@ -33,8 +33,7 @@ func PanicHandler(err interface{}, withTrace bool, args ...*wormhole.Wormhole) {
         buf := make([]byte, 1<<16)
         stackSize := runtime.Stack(buf, false)
 
-        trace += string(buf[0:stackSize])
-        trace += "\n\n"
+        trace += "\n\n" + string(buf[0:stackSize])
     }
 
     rtm.SendMessage(rtm.NewOutgoingMessage(
