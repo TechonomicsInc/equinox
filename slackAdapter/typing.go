@@ -7,9 +7,11 @@ import (
 )
 
 func StartTyping(args ...*wormhole.Wormhole) equinox.AdapterEvent {
-    equinox.GetSession().(*slack.RTM).NewTypingMessage(
+    session := equinox.GetSession().(*slack.RTM)
+
+    session.SendMessage(session.NewTypingMessage(
         args[0].AsBox().(*slack.MessageEvent).Channel,
-    )
+    ))
 
     return equinox.CONTINUE_EXECUTION
 }
