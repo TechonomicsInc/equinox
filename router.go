@@ -2,7 +2,6 @@ package equinox
 
 import (
     "code.lukas.moe/x/wormhole"
-    "fmt"
     "reflect"
     "regexp"
     "runtime"
@@ -28,8 +27,8 @@ func (r *Router) Dispatch(e Event, args ...*wormhole.Wormhole) (ret AdapterEvent
 
         ret = handler(args...)
 
-        fmt.Printf(
-            "[DISPATCHER] EQUINOX_EVENT:%v -> %v -> ADAPTER_EVENT:%v\n",
+        r.logf(
+            "[DISPATCHER] EQUINOX_EVENT:%v -> %v -> ADAPTER_EVENT:%v",
             e,
             runtime.FuncForPC(reflect.ValueOf(handler).Pointer()).Name(),
             ret,
@@ -54,7 +53,7 @@ func (r *Router) Handle(msg string, input *wormhole.Wormhole) {
         end := time.Now().UnixNano()
         duration := time.Duration(end - start)
 
-        fmt.Printf("[DISPATCHER] Handle() call took %f ms\n", float64(duration)/float64(time.Millisecond))
+        r.logf("[DISPATCHER] Handle() call took %f ms", float64(duration)/float64(time.Millisecond))
     }()
 
     // Init adapter var
@@ -78,18 +77,43 @@ func (r *Router) Handle(msg string, input *wormhole.Wormhole) {
     // Loop through all listeners
     for listener, handlers := range r.Routes {
         // Check if the listener is a RegExp
-        if listener.IsRegexp && listener.Content.(*regexp.Regexp).MatchString(msg) {
-            // If it's a matching regexp call all handlers
-            for _, handler := range handlers {
-                go r.execHandler(handler, input, messageFields[0], strings.Join(messageFields[1:], " "), nil)
+        if listener.IsRegexp {
+            expr := listener.Content
+            if strings.Contains(expr, "{p}") {
+                expr = strings.Replace(expr, "{p}", *r.prefixHandler().AsString(), 1)
             }
+            regex := regexp.MustCompile(expr)
 
-            // Break outer loop because of the match
-            break
+            if regex.MatchString(msg) {
+                r.logf("[LISTENER] Triggered %s", expr)
+
+                // Extract matches using regex
+                matchMap := map[string]string{}
+                matches := regex.FindAllString(msg, -1)
+
+                // Convert array to a map
+                for i, match := range matches {
+                    matchMap["match_"+strconv.Itoa(i)] = match
+                }
+
+                // If it's a matching regexp call all handlers
+                for _, handler := range handlers {
+                    go r.execHandler(
+                        handler,
+                        input,
+                        messageFields[0],
+                        strings.Join(messageFields[1:], " "),
+                        matchMap,
+                    )
+                }
+
+                // Break outer loop because of the match
+                break
+            }
         }
 
         // Split the listener into fields
-        listenerFields := strings.Fields(listener.Content.(string))
+        listenerFields := strings.Fields(listener.Content)
 
         // Check if the handler expects @mentions
         if strings.Contains(listenerFields[0], "{@}") {
@@ -101,6 +125,7 @@ func (r *Router) Handle(msg string, input *wormhole.Wormhole) {
 
             // If mentions are present call the module
             for _, handler := range handlers {
+                r.logf("[LISTENER] Triggered %s", listenerFields[0])
                 go r.execHandler(handler, input, messageFields[0], strings.Join(messageFields[1:], " "), nil)
             }
 
@@ -157,6 +182,7 @@ func (r *Router) Handle(msg string, input *wormhole.Wormhole) {
 
         // Call handlers
         for _, handler := range handlers {
+            r.logf("[LISTENER] Triggered %s", listenerFields[0])
             go r.execHandler(handler, input, messageFields[0], strings.Join(messageFields[1:], " "), actionParams)
         }
 
@@ -168,7 +194,7 @@ func (r *Router) Handle(msg string, input *wormhole.Wormhole) {
 }
 
 func (r *Router) execHandler(
-    handler *Handler,
+    handler Handler,
     input *wormhole.Wormhole,
     command string,
     content string,
@@ -195,5 +221,5 @@ func (r *Router) execHandler(
     }
 
     // Call action
-    (*handler).Action(command, content, actionParams, input)
+    handler.Action(command, content, actionParams, input)
 }

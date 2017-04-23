@@ -25,7 +25,7 @@ type Handler interface {
 // Listener is a simple container that may either hold a string-pattern or a RegExp object
 type Listener struct {
     IsRegexp bool
-    Content  interface{}
+    Content  string
 }
 
 type Router struct {
@@ -39,5 +39,5 @@ type Router struct {
     parseErrorHandler ParseErrorHandler
 
     EventHandlers map[Event][]AdapterFunc
-    Routes        map[*Listener][]*Handler
+    Routes        map[*Listener][]Handler
 }

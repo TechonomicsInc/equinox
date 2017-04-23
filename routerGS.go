@@ -1,6 +1,8 @@
 package equinox
 
-import "fmt"
+import (
+    "fmt"
+)
 
 // NewRouter constructs a router object with some default adapters
 func NewRouter() *Router {
@@ -8,7 +10,7 @@ func NewRouter() *Router {
 
     r.Lock()
     r.EventHandlers = make(map[Event][]AdapterFunc)
-    r.Routes = make(map[*Listener][]*Handler)
+    r.Routes = make(map[*Listener][]Handler)
     r.Unlock()
 
     r.UseDebugMode(false)
@@ -21,16 +23,16 @@ func NewRouter() *Router {
 // AddRoutes is syntactic sugar for a loop that calls AddRoute() multiple times.
 func (r *Router) AddRoutes(handlers []Handler) {
     for _, h := range handlers {
-        r.AddRoute(&h)
+        r.AddRoute(h)
     }
 }
 
 // AddRoute calls the handler's Init() and addss it's listeners to the routing table
-func (r *Router) AddRoute(handler *Handler) {
+func (r *Router) AddRoute(handler Handler) {
     r.Lock()
     defer r.Unlock()
 
-    for _, l := range (*handler).Listeners() {
+    for _, l := range (handler).Listeners() {
         if _, ok := r.Routes[l]; !ok {
             r.Routes[l] = append(r.Routes[l], handler)
         } else {
@@ -42,7 +44,7 @@ func (r *Router) AddRoute(handler *Handler) {
         }
     }
 
-    (*handler).Init()
+    handler.Init()
 }
 
 func (r *Router) RegisterAdapter(e Event, f AdapterFunc) {
@@ -85,7 +87,7 @@ func (r *Router) SetLastResort(f POGOFunc) {
     r.lastResort = f
 }
 
-func (r * Router) UseDebugMode(i bool) {
+func (r *Router) UseDebugMode(i bool) {
     r.Lock()
     defer r.Unlock()
 
