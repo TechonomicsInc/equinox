@@ -178,7 +178,7 @@ func (r *Router) execHandler(
     defer func() {
         e := recover()
         if e != nil {
-            r.panicHandler(e, input)
+            r.panicHandler(e, r.debugMode, input)
             return
         }
 

@@ -31,6 +31,8 @@ type Listener struct {
 type Router struct {
     sync.RWMutex
 
+    debugMode bool
+
     lastResort        POGOFunc
     prefixHandler     PrefixHandler
     panicHandler      PanicHandler

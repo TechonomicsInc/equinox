@@ -11,6 +11,7 @@ func NewRouter() *Router {
     r.Routes = make(map[*Listener][]*Handler)
     r.Unlock()
 
+    r.UseDebugMode(false)
     r.SetPanicHandler(DefaultPanicHandler)
     r.RegisterAdapter(MESSAGE_PRE_ANALYZE, DefaultPrefixAdapter)
 
@@ -82,4 +83,11 @@ func (r *Router) SetLastResort(f POGOFunc) {
     defer r.Unlock()
 
     r.lastResort = f
+}
+
+func (r * Router) UseDebugMode(i bool) {
+    r.Lock()
+    defer r.Unlock()
+
+    r.debugMode = i
 }
