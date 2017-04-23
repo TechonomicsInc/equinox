@@ -174,21 +174,25 @@ func (r *Router) execHandler(
     content string,
     actionParams map[string]string,
 ) {
+    // Defer post-execute handlers
+    defer func() {
+        e := recover()
+        if e != nil {
+            r.panicHandler(e, input)
+            return
+        }
+
+        ret := r.Dispatch(HANDLER_POST_EXECUTE, input)
+        if ret == STOP_EXECUTION {
+            return
+        }
+    }()
+
     // Call pre execute handlers
     ret := r.Dispatch(HANDLER_PRE_EXECUTE, input)
     if ret == STOP_EXECUTION {
         return
     }
-
-    // Defer post-execute handlers
-    defer func() {
-        ret := r.Dispatch(HANDLER_POST_EXECUTE, input)
-        if ret == STOP_EXECUTION {
-            return
-        }
-
-        r.panicHandler(input)
-    }()
 
     // Call action
     (*handler).Action(command, content, actionParams, input)
