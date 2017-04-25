@@ -11,13 +11,14 @@ import (
 )
 
 func (r *Router) Dispatch(e Event, args ...*wormhole.Wormhole) (ret AdapterEvent) {
-    defer PanicAdapter()
+    ret = NO_HANDLERS_REGISTERED
 
-    // If there are no handlers for the event just return
+    // Check if any handlers are defined
     if _, ok := r.EventHandlers[e]; !ok {
         return
     }
 
+    // Check if there are more than 0 defined handlers
     if len(r.EventHandlers[e]) == 0 {
         return
     }
@@ -27,18 +28,16 @@ func (r *Router) Dispatch(e Event, args ...*wormhole.Wormhole) (ret AdapterEvent
 
         ret = handler(args...)
 
-        r.logf(
-            "[DISPATCHER] EQUINOX_EVENT:%v -> %v -> ADAPTER_EVENT:%v",
-            e,
-            runtime.FuncForPC(reflect.ValueOf(handler).Pointer()).Name(),
-            ret,
-        )
+        onDebug(func() {
+            handlerName := runtime.FuncForPC(reflect.ValueOf(handler).Pointer()).Name()
+            handlerName = strings.Replace(handlerName, "code.lukas.moe", "", -1)
+            handlerName = strings.Replace(handlerName, "/x/", "", -1)
+            handlerName = strings.Replace(handlerName, "equinox/", "", -1)
 
-        switch ret {
-        case CONTINUE_EXECUTION:
-            continue
+            logf("[DISPATCHER] %v -> %v -> %v", e.String(), handlerName, ret.String())
+        })
 
-        case STOP_EXECUTION:
+        if ret.ShouldAbort() {
             return
         }
     }
@@ -47,29 +46,25 @@ func (r *Router) Dispatch(e Event, args ...*wormhole.Wormhole) (ret AdapterEvent
 }
 
 func (r *Router) Handle(msg string, input *wormhole.Wormhole) {
-    // Deferred counter for debugging
-    start := time.Now().UnixNano()
-    defer func() {
-        end := time.Now().UnixNano()
-        duration := time.Duration(end - start)
+    var (
+        start, end float64
+        debugDefer = func() {}
+    )
 
-        r.logf("[DISPATCHER] Handle() call took %f ms", float64(duration)/float64(time.Millisecond))
-    }()
+    onDebug(func() {
+        start = float64(time.Now().UnixNano())
 
-    // Init adapter var
-    ret := CONTINUE_EXECUTION
+        debugDefer = func() {
+            end = float64(time.Now().UnixNano())
+            logf("[DISPATCHER] Handle() call took %f ms", (end-start)/float64(time.Millisecond))
+        }
+    })
 
-    // Call PRE_ANALYZE adapters
-    ret = r.Dispatch(MESSAGE_PRE_ANALYZE, wormhole.To(r), wormhole.ToString(msg), input)
-    if ret == STOP_EXECUTION {
-        return
-    }
+    defer debugDefer()
+    defer AdapterPanicHandler()
 
-    // Call ANALYZE adapters
-    ret = r.Dispatch(MESSAGE_ANALYZE, input)
-    if ret == STOP_EXECUTION {
-        return
-    }
+    r.Dispatch(MESSAGE_PRE_ANALYZE, wormhole.To(r), wormhole.ToString(msg), input).Act()
+    r.Dispatch(MESSAGE_ANALYZE, input).Act()
 
     // Split message into fields
     messageFields := strings.Fields(msg)
@@ -85,7 +80,9 @@ func (r *Router) Handle(msg string, input *wormhole.Wormhole) {
             regex := regexp.MustCompile(expr)
 
             if regex.MatchString(msg) {
-                r.logf("[LISTENER] Triggered %s", expr)
+                onDebug(func() {
+                    logf("[LISTENER] Triggered %s", expr)
+                })
 
                 // Extract matches using regex
                 matchMap := map[string]string{}
@@ -95,6 +92,8 @@ func (r *Router) Handle(msg string, input *wormhole.Wormhole) {
                 for i, match := range matches {
                     matchMap["match_"+strconv.Itoa(i)] = match
                 }
+
+                r.Dispatch(MESSAGE_POST_ANALYZE, input).Act()
 
                 // If it's a matching regexp call all handlers
                 for _, handler := range handlers {
@@ -107,8 +106,8 @@ func (r *Router) Handle(msg string, input *wormhole.Wormhole) {
                     )
                 }
 
-                // Break outer loop because of the match
-                break
+                // Kill outer loop because of the match
+                return
             }
         }
 
@@ -117,20 +116,24 @@ func (r *Router) Handle(msg string, input *wormhole.Wormhole) {
 
         // Check if the handler expects @mentions
         if strings.Contains(listenerFields[0], "{@}") {
-            // Call @mention adapters
-            ret = r.Dispatch(MESSAGE_CHECK_OUR_MENTIONS, input)
-            if ret == STOP_EXECUTION {
-                return
-            }
+            // Check if any mentions are present
+            r.Dispatch(MESSAGE_CHECK_MENTIONS, input).Act()
+
+            // Check if mentions for us are present
+            r.Dispatch(MESSAGE_CHECK_OUR_MENTIONS, input).Act()
+
+            r.Dispatch(MESSAGE_POST_ANALYZE, input).Act()
 
             // If mentions are present call the module
             for _, handler := range handlers {
-                r.logf("[LISTENER] Triggered %s", listenerFields[0])
+                onDebug(func() {
+                    logf("[LISTENER] Triggered %s", listenerFields[0])
+                })
                 go r.execHandler(handler, input, messageFields[0], strings.Join(messageFields[1:], " "), nil)
             }
 
-            // Break outer loop
-            break
+            // Kill outer loop
+            return
         }
 
         // Replace the prefix-placeholder if present
@@ -157,7 +160,7 @@ func (r *Router) Handle(msg string, input *wormhole.Wormhole) {
                         strconv.Itoa(len(messageFields)-1)+ " != "+ strconv.Itoa(len(listenerFields)-1),
                 ),
             )
-            break
+            return
         }
 
         for i = 0; i < len(listenerFields); i++ {
@@ -180,17 +183,19 @@ func (r *Router) Handle(msg string, input *wormhole.Wormhole) {
         actionParams["command"] = actionParams[messageFields[0]]
         delete(actionParams, messageFields[0])
 
+        r.Dispatch(MESSAGE_POST_ANALYZE, input).Act()
+
         // Call handlers
         for _, handler := range handlers {
-            r.logf("[LISTENER] Triggered %s", listenerFields[0])
+            onDebug(func() {
+                logf("[LISTENER] Triggered %s", listenerFields[0])
+            })
             go r.execHandler(handler, input, messageFields[0], strings.Join(messageFields[1:], " "), actionParams)
         }
 
-        // Break outer loop
-        break
+        // Exit outer loop
+        return
     }
-
-    ret = r.Dispatch(MESSAGE_POST_ANALYZE, input)
 }
 
 func (r *Router) execHandler(
@@ -208,15 +213,11 @@ func (r *Router) execHandler(
             return
         }
 
-        ret := r.Dispatch(HANDLER_POST_EXECUTE, input)
-        if ret == STOP_EXECUTION {
-            return
-        }
+        r.Dispatch(HANDLER_POST_EXECUTE, input)
     }()
 
     // Call pre execute handlers
-    ret := r.Dispatch(HANDLER_PRE_EXECUTE, input)
-    if ret == STOP_EXECUTION {
+    if r.Dispatch(HANDLER_PRE_EXECUTE, input).ShouldAbort() {
         return
     }
 

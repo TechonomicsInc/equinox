@@ -86,10 +86,3 @@ func (r *Router) SetLastResort(f POGOFunc) {
 
     r.lastResort = f
 }
-
-func (r *Router) UseDebugMode(i bool) {
-    r.Lock()
-    defer r.Unlock()
-
-    r.debugMode = i
-}

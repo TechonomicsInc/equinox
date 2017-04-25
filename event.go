@@ -1,3 +1,4 @@
+//go:generate stringer -type Event
 package equinox
 
 // Event is a simple enum that is used to register and dispatch events
@@ -24,4 +25,10 @@ const (
 
     // Called after the matched handler was executed
     HANDLER_POST_EXECUTE
+
+    // Called before executing the last resort
+    LAST_RESORT_PRE_EXECUTE
+
+    // Called after executing the last resort
+    LAST_RESORT_POST_EXECUTE
 )
