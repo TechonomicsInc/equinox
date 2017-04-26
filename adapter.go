@@ -33,9 +33,3 @@ func AdapterPanicHandler() {
         panic(e)
     }
 }
-
-// POGOFunc (Plain old Go Func) is a simple void func without parameters
-type POGOFunc func()
-
-// NOOP is a small helper for router parameters that require POGOFunc's
-func NOOP() {}

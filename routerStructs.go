@@ -33,7 +33,7 @@ type Router struct {
 
     debugMode bool
 
-    lastResort        POGOFunc
+    lastResort        POGOFuncW1
     prefixHandler     PrefixHandler
     panicHandler      PanicHandler
     parseErrorHandler ParseErrorHandler

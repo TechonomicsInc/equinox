@@ -14,7 +14,7 @@ const (
     // Called after the parsing is finished
     MESSAGE_POST_ANALYZE
 
-    // Called to wake adapters that check if any @mentions are present
+    // Called to wake adapters that check if any @mentions are present.
     MESSAGE_CHECK_MENTIONS
 
     // Called to wake adapters adapters that check if any @mentions for us are present

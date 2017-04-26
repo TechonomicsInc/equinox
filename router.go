@@ -196,6 +196,12 @@ func (r *Router) Handle(msg string, input *wormhole.Wormhole) {
         // Exit outer loop
         return
     }
+
+    // For some reason no message matched.
+    // Call our last resort.
+    r.Dispatch(LAST_RESORT_PRE_EXECUTE, input).Act()
+    r.lastResort(input)
+    r.Dispatch(LAST_RESORT_POST_EXECUTE, input).Act()
 }
 
 func (r *Router) execHandler(
