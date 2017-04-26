@@ -10,6 +10,9 @@ import (
     "time"
 )
 
+// Sends an event to all registered listeners.
+// If non are registered it will emit a NO_HANDLERS_REGISTERED.
+
 func (r *Router) Dispatch(e Event, args ...*wormhole.Wormhole) (ret AdapterEvent) {
     ret = NO_HANDLERS_REGISTERED
 
@@ -28,7 +31,7 @@ func (r *Router) Dispatch(e Event, args ...*wormhole.Wormhole) (ret AdapterEvent
 
         ret = handler(args...)
 
-        onDebug(func() {
+        OnDebug(func() {
             handlerName := runtime.FuncForPC(reflect.ValueOf(handler).Pointer()).Name()
             handlerName = strings.Replace(handlerName, "code.lukas.moe", "", -1)
             handlerName = strings.Replace(handlerName, "/x/", "", -1)
@@ -45,13 +48,16 @@ func (r *Router) Dispatch(e Event, args ...*wormhole.Wormhole) (ret AdapterEvent
     return
 }
 
+// Handle takes an incoming message and the corresponding object.
+// The message is parsed according to all registered handlers and if one of them matches
+// they will be executed in the execHandler() sandbox.
 func (r *Router) Handle(msg string, input *wormhole.Wormhole) {
     var (
         start, end float64
         debugDefer = func() {}
     )
 
-    onDebug(func() {
+    OnDebug(func() {
         start = float64(time.Now().UnixNano())
 
         debugDefer = func() {
@@ -80,7 +86,7 @@ func (r *Router) Handle(msg string, input *wormhole.Wormhole) {
             regex := regexp.MustCompile(expr)
 
             if regex.MatchString(msg) {
-                onDebug(func() {
+                OnDebug(func() {
                     logf("[LISTENER] Triggered %s", expr)
                 })
 
@@ -126,7 +132,7 @@ func (r *Router) Handle(msg string, input *wormhole.Wormhole) {
 
             // If mentions are present call the module
             for _, handler := range handlers {
-                onDebug(func() {
+                OnDebug(func() {
                     logf("[LISTENER] Triggered %s", listenerFields[0])
                 })
                 go r.execHandler(handler, input, messageFields[0], strings.Join(messageFields[1:], " "), nil)
@@ -187,7 +193,7 @@ func (r *Router) Handle(msg string, input *wormhole.Wormhole) {
 
         // Call handlers
         for _, handler := range handlers {
-            onDebug(func() {
+            OnDebug(func() {
                 logf("[LISTENER] Triggered %s", listenerFields[0])
             })
             go r.execHandler(handler, input, messageFields[0], strings.Join(messageFields[1:], " "), actionParams)
@@ -204,6 +210,7 @@ func (r *Router) Handle(msg string, input *wormhole.Wormhole) {
     r.Dispatch(LAST_RESORT_POST_EXECUTE, input).Act()
 }
 
+// execHandler safely executes the passed handler and catches any possible panics
 func (r *Router) execHandler(
     handler Handler,
     input *wormhole.Wormhole,

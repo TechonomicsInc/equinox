@@ -28,6 +28,7 @@ type Listener struct {
     Content  string
 }
 
+// TODO: write docs about the most important thing in equinox ._.
 type Router struct {
     sync.RWMutex
 

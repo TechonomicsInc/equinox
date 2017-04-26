@@ -5,7 +5,7 @@ import (
     "github.com/davecgh/go-spew/spew"
 )
 
-// AdapterFunc is a function that takes N wormholes and returns an AdapterEvent
+// AdapterFunc defines a function that takes N wormholes and returns an AdapterEvent
 type AdapterFunc func(args ...*wormhole.Wormhole) AdapterEvent
 
 // AdapterPanic is thrown by adapters to indicate which Event caused the panic
@@ -14,13 +14,13 @@ type AdapterPanic struct {
     Reason interface{}
 }
 
-// PanicAdapter should be deferred when executing adapters
+// AdapterPanicHandler should be deferred BEFORE executing adapters
 func AdapterPanicHandler() {
     if e := recover(); e != nil {
         exc, ok := e.(AdapterPanic)
 
         if ok {
-            onDebug(func() {
+            OnDebug(func() {
                 log("Caught AdapterPanic")
                 spew.Dump(exc)
             })

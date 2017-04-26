@@ -1,5 +1,6 @@
-//go:generate stringer -type Event
 package equinox
+
+//go:generate stringer -type Event
 
 // Event is a simple enum that is used to register and dispatch events
 type Event int

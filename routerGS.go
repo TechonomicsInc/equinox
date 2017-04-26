@@ -15,6 +15,8 @@ func NewRouter() *Router {
 
     r.UseDebugMode(false)
     r.SetPanicHandler(DefaultPanicHandler)
+    r.SetParseErrorHandler(DefaultParseErrorHandler)
+    r.SetLastResort(NOOPW1)
     r.RegisterAdapter(MESSAGE_PRE_ANALYZE, DefaultPrefixAdapter)
 
     return r
@@ -47,6 +49,7 @@ func (r *Router) AddRoute(handler Handler) {
     handler.Init()
 }
 
+// RegisterAdapter registers adapter F for event E
 func (r *Router) RegisterAdapter(e Event, f AdapterFunc) {
     r.Lock()
     defer r.Unlock()
@@ -59,6 +62,7 @@ func (r *Router) RegisterAdapter(e Event, f AdapterFunc) {
     r.EventHandlers[e] = append(r.EventHandlers[e], f)
 }
 
+// Changes the active prefix handler
 func (r *Router) SetPrefixHandler(h PrefixHandler) {
     r.Lock()
     defer r.Unlock()
@@ -66,6 +70,7 @@ func (r *Router) SetPrefixHandler(h PrefixHandler) {
     r.prefixHandler = h
 }
 
+// Changes the active panic handler
 func (r *Router) SetPanicHandler(h PanicHandler) {
     r.Lock()
     defer r.Unlock()
@@ -73,6 +78,7 @@ func (r *Router) SetPanicHandler(h PanicHandler) {
     r.panicHandler = h
 }
 
+// Changes the active error handler
 func (r *Router) SetParseErrorHandler(h ParseErrorHandler) {
     r.Lock()
     defer r.Unlock()
@@ -80,6 +86,7 @@ func (r *Router) SetParseErrorHandler(h ParseErrorHandler) {
     r.parseErrorHandler = h
 }
 
+// Changes the active last resort
 func (r *Router) SetLastResort(f POGOFuncW1) {
     r.Lock()
     defer r.Unlock()
