@@ -80,7 +80,7 @@ func (r *Router) SetParseErrorHandler(h ParseErrorHandler) {
     r.parseErrorHandler = h
 }
 
-func (r *Router) SetLastResort(f POGOFunc) {
+func (r *Router) SetLastResort(f POGOFuncW1) {
     r.Lock()
     defer r.Unlock()
 
