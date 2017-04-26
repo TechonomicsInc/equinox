@@ -45,7 +45,6 @@ func (r *Router) GetDebugMode() bool {
     return getDebugMode()
 }
 
-
 // OnDebug is a conveniece function that conditionally executes code.
 // The callback will do nothing if debugging is disabled.
 func OnDebug(fun func()) {

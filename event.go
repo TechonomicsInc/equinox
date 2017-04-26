@@ -7,7 +7,7 @@ type Event int
 
 const (
     // Called before any message parsing is done
-    MESSAGE_PRE_ANALYZE  Event = iota
+    MESSAGE_PRE_ANALYZE Event = iota
 
     // Called after the message has been identified as "for us" but before any advanced parsing
     MESSAGE_ANALYZE

@@ -80,5 +80,5 @@ Example for discord:
 Note that the prefix handler is called for every incoming message.
 You should implement some kind of prefix caching if you don't want degrading performance and/or overloaded database
 servers.
- */
+*/
 package equinox
