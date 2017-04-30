@@ -204,10 +204,20 @@ func (r *Router) Handle(msg string, input *wormhole.Wormhole) {
     }
 
     // For some reason no message matched.
-    // Call our last resort.
-    r.Dispatch(LAST_RESORT_PRE_EXECUTE, input).Act()
-    r.lastResort(input)
-    r.Dispatch(LAST_RESORT_POST_EXECUTE, input).Act()
+    // Call our (sandboxed) last resort.
+    go func() {
+        r.Dispatch(LAST_RESORT_PRE_EXECUTE, input).Act()
+        defer func() {
+            e := recover()
+            if e != nil {
+                r.panicHandler(e, r.debugMode, input)
+                return
+            }
+
+            r.Dispatch(LAST_RESORT_POST_EXECUTE, input)
+        }()
+        r.lastResort(input)
+    }()
 }
 
 // execHandler safely executes the passed handler and catches any possible panics

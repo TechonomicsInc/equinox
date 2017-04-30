@@ -24,20 +24,34 @@ func ParseErrorHandler(command string, msg *wormhole.Wormhole, err *wormhole.Wor
     )
 }
 
-func PanicHandler(err interface{}, withTrace bool, args ...*wormhole.Wormhole) {
-    msg := args[0].AsBox().(*slack.MessageEvent)
-    rtm := equinox.GetSession().(*slack.RTM)
-    trace := ""
+func NewPanicHandler(message string, appendix string, userCodeblock bool) equinox.PanicHandler {
+    return func(err interface{}, withTrace bool, args ...*wormhole.Wormhole) {
+        msg := args[0].AsBox().(*slack.MessageEvent)
+        rtm := equinox.GetSession().(*slack.RTM)
+        trace := ""
 
-    if withTrace {
-        buf := make([]byte, 1<<16)
-        stackSize := runtime.Stack(buf, false)
+        if withTrace {
+            buf := make([]byte, 1<<16)
+            stackSize := runtime.Stack(buf, false)
 
-        trace += "\n\n" + string(buf[0:stackSize])
+            trace += "\n\n" + string(buf[0:stackSize])
+        }
+
+        m := ""
+        m += message
+        if userCodeblock {
+            m += "\n```\n"
+        }
+        m += fmt.Sprintf("%v%v", err, trace)
+        if userCodeblock {
+            m += "\n```\n"
+        }
+        m += appendix
+
+        rtm.SendMessage(rtm.NewOutgoingMessage(m, msg.Channel, ))
     }
+}
 
-    rtm.SendMessage(rtm.NewOutgoingMessage(
-        "Error :scream:\n```\n"+fmt.Sprintf("%v%v", err, trace)+"\n```",
-        msg.Channel,
-    ))
+func NewDefaultPanicHandler() equinox.PanicHandler {
+    return NewPanicHandler("Error :scream:", "", true)
 }

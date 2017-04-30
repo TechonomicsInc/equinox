@@ -17,7 +17,6 @@ func NewRouter() *Router {
     r.SetPanicHandler(DefaultPanicHandler)
     r.SetParseErrorHandler(DefaultParseErrorHandler)
     r.SetLastResort(NOOPW1)
-    r.RegisterAdapter(MESSAGE_PRE_ANALYZE, DefaultPrefixAdapter)
 
     return r
 }
