@@ -91,7 +91,7 @@ router.SetPrefixHandler(func(args ...interface{})(interface{}){
 
     // retrieve prefix from database //
 
-    return wormhole.ToString(prefix)
+    return prefix
 })
 ```
 

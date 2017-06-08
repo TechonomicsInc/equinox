@@ -81,7 +81,7 @@ func (r *Router) Handle(msg string, input interface{}) {
         if listener.IsRegexp {
             expr := listener.Content
             if strings.Contains(expr, "{p}") {
-                expr = strings.Replace(expr, "{p}", *r.prefixHandler().AsString(), 1)
+                expr = strings.Replace(expr, "{p}", r.prefixHandler().(string), 1)
             }
             regex := regexp.MustCompile(expr)
 
@@ -144,7 +144,7 @@ func (r *Router) Handle(msg string, input interface{}) {
 
         // Replace the prefix-placeholder if present
         if strings.Contains(listenerFields[0], "{p}") {
-            listenerFields[0] = strings.Replace(listenerFields[0], "{p}", *r.prefixHandler().AsString(), -1)
+            listenerFields[0] = strings.Replace(listenerFields[0], "{p}", r.prefixHandler().(string), -1)
         }
 
         // Skip iteration if the current listener doesn't match
