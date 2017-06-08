@@ -62,6 +62,54 @@ const (
 These codes should be pretty self-explaining.
 The first adapter that returns a `STOP_EXECUTION` code breaks the event chain and aborts all further operations.
 
+## Adapter Events
+
+You'll only meet those guys when implementing your own adapters.
+
+`AdapterEvent` is an enum that tells the router to continue/stop execution.
+You should always try to ignore "direct" `AdapterEvent` values and use the bound functions instead.
+This way the error-handling and Event-Parsing stays in a central place.
+
+The easiest usage form is to defer the corresponding panic-handler and call `AdapterEvent#Act()`.
+This automates the reaction to the returned event and you only have to take care of errors.
+
+```go
+defer AdapterPanicHandler()
+r.Dispatch(MY_COOL_EVENT, arg1, arg2, arg...).Act()
+```
+
+If you want to have some more control about the panics/errors there is `AdapterEvent#ShouldAbort()`.
+Just wrap the Dispatch call into an if-clause and return as needed.
+
+```go
+if r.Dispatch(MY_COOL_EVENT, arg1, arg2, arg...).ShouldAbort() {
+    return
+}
+
+// else do something
+```
+
+And last but not least you can always throw the Event at a switch clause.
+
+```go
+switch r.Dispatch(MY_COOL_EVENT, arg1, arg2, arg...) {
+case CONTINUE_EXECUTION, NO_HANDLERS_REGISTERED:
+ /* Continue execution */
+ break
+
+case STOP_EXECUTION:
+ /* Kill execution */
+ return
+
+case PANIC:
+ panic("wew i did not see that coming")
+
+}
+```
+
+AdapterEvents might be added/removed/changed until equinox reaches a stable release so make sure to add a "default"
+case that handles unknown Events.
+
 ## Message Prefixing
 
 Usually chatbots require their own prefix to trigger executions.
