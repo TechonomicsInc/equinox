@@ -1,12 +1,11 @@
 package equinox
 
 import (
-    "code.lukas.moe/x/wormhole"
     "github.com/davecgh/go-spew/spew"
 )
 
 // AdapterFunc defines a function that takes N wormholes and returns an AdapterEvent
-type AdapterFunc func(args ...*wormhole.Wormhole) AdapterEvent
+type AdapterFunc func(args ...interface{}) AdapterEvent
 
 // AdapterPanic is thrown by adapters to indicate which Event caused the panic
 type AdapterPanic struct {

@@ -8,16 +8,16 @@ import (
     "runtime"
 )
 
-func ParseErrorHandler(command string, msg *wormhole.Wormhole, err *wormhole.Wormhole) {
-    rtm := equinox.GetSession().(*slack.RTM)
-    msgo := msg.AsBox().(*slack.MessageEvent)
+func ParseErrorHandler(command string, msg interface{}, err interface{}) {
+    rtm := equinox.(*slack.RTM)
+    msgo := msg.(*slack.MessageEvent)
 
     rtm.SendMessage(
         rtm.NewOutgoingMessage(
             fmt.Sprintf(
                 "Parse error while processing `%s`!\n```\n%s\n```",
                 command,
-                *err.AsString(),
+                err.(string),
             ),
             msgo.Channel,
         ),
@@ -25,7 +25,7 @@ func ParseErrorHandler(command string, msg *wormhole.Wormhole, err *wormhole.Wor
 }
 
 func NewPanicHandler(message string, appendix string, userCodeblock bool) equinox.PanicHandler {
-    return func(err interface{}, withTrace bool, args ...*wormhole.Wormhole) {
+    return func(err interface{}, withTrace bool, args ...interface{}) {
         msg := args[0].AsBox().(*slack.MessageEvent)
         rtm := equinox.GetSession().(*slack.RTM)
         trace := ""

@@ -13,7 +13,7 @@ import (
 // Sends an event to all registered listeners.
 // If non are registered it will emit a NO_HANDLERS_REGISTERED.
 
-func (r *Router) Dispatch(e Event, args ...*wormhole.Wormhole) (ret AdapterEvent) {
+func (r *Router) Dispatch(e Event, args ...interface{}) (ret AdapterEvent) {
     ret = NO_HANDLERS_REGISTERED
 
     // Check if any handlers are defined
@@ -51,7 +51,7 @@ func (r *Router) Dispatch(e Event, args ...*wormhole.Wormhole) (ret AdapterEvent
 // Handle takes an incoming message and the corresponding object.
 // The message is parsed according to all registered handlers and if one of them matches
 // they will be executed in the execHandler() sandbox.
-func (r *Router) Handle(msg string, input *wormhole.Wormhole) {
+func (r *Router) Handle(msg string, input interface{}) {
     var (
         start, end float64
         debugDefer = func() {}
@@ -223,7 +223,7 @@ func (r *Router) Handle(msg string, input *wormhole.Wormhole) {
 // execHandler safely executes the passed handler and catches any possible panics
 func (r *Router) execHandler(
     handler Handler,
-    input *wormhole.Wormhole,
+    input interface{},
     command string,
     content string,
     actionParams map[string]string,

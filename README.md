@@ -86,7 +86,7 @@ prefix handler. Just create a function that resolves the prefix and returns a wo
 Example for discord:
 
 ```go
-router.SetPrefixHandler(func(args ...*wormhole.Wormhole)(*wormhole.Wormhole){
+router.SetPrefixHandler(func(args ...interface{})(interface{}){
     var prefix string
 
     // retrieve prefix from database //

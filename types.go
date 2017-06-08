@@ -1,21 +1,19 @@
 package equinox
 
-import "code.lukas.moe/x/wormhole"
-
 // POGOFunc is a void func without parameters
 type POGOFunc func()
 
 // POGOFuncW1 is a void func with one parameter
-type POGOFuncW1 func(arg *wormhole.Wormhole)
+type POGOFuncW1 func(arg interface{})
 
 // POGOFuncWV is a void func with n parameters
-type POGOFuncWV func(args ...*wormhole.Wormhole)
+type POGOFuncWV func(args ...interface{})
 
 // A NOOP that satisfies POGOFunc
 func NOOP() {}
 
 // A NOOP that satisfies POGOFuncW1
-func NOOPW1(arg *wormhole.Wormhole) {}
+func NOOPW1(arg interface{}) {}
 
 // A NOOP that satiesfies POGOFuncWV
-func NOOPWV(args ...*wormhole.Wormhole) {}
+func NOOPWV(args ...interface{}) {}

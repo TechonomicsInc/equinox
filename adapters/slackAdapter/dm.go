@@ -2,11 +2,10 @@ package slackAdapter
 
 import (
     "code.lukas.moe/x/equinox"
-    "code.lukas.moe/x/wormhole"
     "github.com/nlopes/slack"
 )
 
-func IsDMOrPrefixed(args ...*wormhole.Wormhole) equinox.AdapterEvent {
+func IsDMOrPrefixed(args ...interface{}) equinox.AdapterEvent {
     if IsDM(args...) == equinox.CONTINUE_EXECUTION {
         return equinox.CONTINUE_EXECUTION
     }
@@ -14,9 +13,9 @@ func IsDMOrPrefixed(args ...*wormhole.Wormhole) equinox.AdapterEvent {
     return equinox.DefaultPrefixAdapter(args...)
 }
 
-func IsDM(args ...*wormhole.Wormhole) equinox.AdapterEvent {
+func IsDM(args ...interface{}) equinox.AdapterEvent {
     rtm := equinox.GetSession().(*slack.RTM)
-    m := args[2].AsBox().(*slack.MessageEvent)
+    m := args[2].(*slack.MessageEvent)
 
     _, _, ch, e := rtm.OpenIMChannel(m.User)
     if e != nil {

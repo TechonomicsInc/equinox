@@ -2,13 +2,12 @@ package discordAdapter
 
 import (
     "code.lukas.moe/x/equinox"
-    "code.lukas.moe/x/wormhole"
     "github.com/bwmarrin/discordgo"
 )
 
-func IgnorePrivateMessages(args ...*wormhole.Wormhole) equinox.AdapterEvent {
-    input := args[0].AsBox().(*discordgo.MessageCreate)
-    session := args[1].AsBox().(*discordgo.Session)
+func IgnorePrivateMessages(args ...interface{}) equinox.AdapterEvent {
+    input := args[0].(*discordgo.MessageCreate)
+    session := args[1].(*discordgo.Session)
 
     channel, err := session.Channel(input.ChannelID)
     if err != nil {
@@ -22,7 +21,7 @@ func IgnorePrivateMessages(args ...*wormhole.Wormhole) equinox.AdapterEvent {
     return equinox.STOP_EXECUTION
 }
 
-func IgnoreChannelMessages(args ...*wormhole.Wormhole) equinox.AdapterEvent {
+func IgnoreChannelMessages(args ...interface{}) equinox.AdapterEvent {
     ret := IgnorePrivateMessages(args...)
 
     if ret == equinox.STOP_EXECUTION {

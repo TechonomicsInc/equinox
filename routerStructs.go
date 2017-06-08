@@ -1,7 +1,6 @@
 package equinox
 
 import (
-    "code.lukas.moe/x/wormhole"
     "sync"
 )
 
@@ -18,7 +17,7 @@ type Handler interface {
         command string,
         content string,
         params map[string]string,
-        msg *wormhole.Wormhole,
+        msg interface{},
     )
 }
 

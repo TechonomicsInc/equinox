@@ -2,13 +2,12 @@ package slackAdapter
 
 import (
     "code.lukas.moe/x/equinox"
-    "code.lukas.moe/x/wormhole"
     "github.com/nlopes/slack"
 )
 
-func IgnorePrivateMessages(args ...*wormhole.Wormhole) equinox.AdapterEvent {
-    input := args[0].AsBox().(*slack.MessageEvent)
-    session := equinox.GetSession().(*slack.RTM)
+func IgnorePrivateMessages(args ...interface{}) equinox.AdapterEvent {
+    input := args[0].(*slack.MessageEvent)
+    session := equinox.(*slack.RTM)
 
     channel, err := session.GetChannelInfo(input.Channel)
     if err != nil {
@@ -22,7 +21,7 @@ func IgnorePrivateMessages(args ...*wormhole.Wormhole) equinox.AdapterEvent {
     return equinox.STOP_EXECUTION
 }
 
-func IgnoreChannelMessages(args ...*wormhole.Wormhole) equinox.AdapterEvent {
+func IgnoreChannelMessages(args ...interface{}) equinox.AdapterEvent {
     ret := IgnorePrivateMessages(args...)
 
     if ret == equinox.STOP_EXECUTION {
