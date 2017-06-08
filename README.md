@@ -32,7 +32,7 @@ It tries to follow KISS where possible and only runs code when explicitly told t
 ## Adapters
 
 Adapters are a central concept of equinox to allow the service-agnosticism.
-Equinox itself only uses stdlib functions and relays "Wormholes" to specialised adapters.
+Equinox itself only uses stdlib functions and relays boxed values to specialised adapters.
 
 Example: You're using discord and want to ignore private messages
 
