@@ -1,4 +1,4 @@
-package slackAdapter
+package slack_adapter
 
 import (
     "code.lukas.moe/x/equinox"

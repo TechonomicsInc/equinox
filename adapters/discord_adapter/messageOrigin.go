@@ -1,20 +1,20 @@
-package slackAdapter
+package discord_adapter
 
 import (
     "code.lukas.moe/x/equinox"
-    "github.com/nlopes/slack"
+    "github.com/bwmarrin/discordgo"
 )
 
 func IgnorePrivateMessages(args ...interface{}) equinox.AdapterEvent {
-    input := args[0].(*slack.MessageEvent)
-    session := equinox.(*slack.RTM)
+    input := args[0].(*discordgo.MessageCreate)
+    session := args[1].(*discordgo.Session)
 
-    channel, err := session.GetChannelInfo(input.Channel)
+    channel, err := session.Channel(input.ChannelID)
     if err != nil {
-        return equinox.CONTINUE_EXECUTION
+        return equinox.STOP_EXECUTION
     }
 
-    if !channel.IsMember {
+    if !channel.IsPrivate {
         return equinox.CONTINUE_EXECUTION
     }
 

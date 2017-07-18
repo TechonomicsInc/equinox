@@ -1,4 +1,4 @@
-package discordAdapter
+package discord_adapter
 
 import (
     "code.lukas.moe/x/equinox"
