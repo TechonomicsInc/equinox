@@ -1,10 +1,10 @@
 package equinox
 
 import (
-    "github.com/davecgh/go-spew/spew"
+    "fmt"
 )
 
-// AdapterFunc defines a function that takes N wormholes and returns an AdapterEvent
+// AdapterFunc defines a function that takes N interfaces and returns an AdapterEvent
 type AdapterFunc func(args ...interface{}) AdapterEvent
 
 // AdapterPanic is thrown by adapters to indicate which Event caused the panic
@@ -21,7 +21,7 @@ func AdapterPanicHandler() {
         if ok {
             OnDebug(func() {
                 log("Caught AdapterPanic")
-                spew.Dump(exc)
+                fmt.Printf("%#v", exc)
             })
 
             if exc.Event != PANIC {

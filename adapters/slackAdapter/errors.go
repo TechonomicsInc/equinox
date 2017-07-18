@@ -2,7 +2,6 @@ package slackAdapter
 
 import (
     "code.lukas.moe/x/equinox"
-    "code.lukas.moe/x/wormhole"
     "fmt"
     "github.com/nlopes/slack"
     "runtime"

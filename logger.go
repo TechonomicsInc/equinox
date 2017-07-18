@@ -6,14 +6,18 @@ import (
 )
 
 func logf(format string, a ...interface{}) {
-    log(fmt.Sprintf(format, a...))
+    if debugMode {
+        log(fmt.Sprintf(format, a...))
+    }
 }
 
 func log(msg string) {
-    fmt.Printf(
-        "[%s] (%s) %s\n",
-        time.Now().Format("15:04:05 02-01-2006"),
-        "EQUINOX",
-        msg,
-    )
+    if debugMode {
+        fmt.Printf(
+            "[%s] (%s) %s\n",
+            time.Now().Format("15:04:05 02-01-2006"),
+            "EQUINOX",
+            msg,
+        )
+    }
 }

@@ -1,7 +1,6 @@
 package equinox
 
 import (
-    "code.lukas.moe/x/wormhole"
     "reflect"
     "regexp"
     "runtime"
@@ -69,7 +68,7 @@ func (r *Router) Handle(msg string, input interface{}) {
     defer debugDefer()
     defer AdapterPanicHandler()
 
-    r.Dispatch(MESSAGE_PRE_ANALYZE, wormhole.To(r), wormhole.ToString(msg), input).Act()
+    r.Dispatch(MESSAGE_PRE_ANALYZE, r, msg, input).Act()
     r.Dispatch(MESSAGE_ANALYZE, input).Act()
 
     // Split message into fields
@@ -161,10 +160,10 @@ func (r *Router) Handle(msg string, input interface{}) {
             r.parseErrorHandler(
                 messageFields[0],
                 input,
-                wormhole.ToString(
-                    "Argument count mismatch.\n"+
-                        strconv.Itoa(len(messageFields)-1)+ " != "+ strconv.Itoa(len(listenerFields)-1),
-                ),
+                "Argument count mismatch.\n"+
+                    strconv.Itoa(len(messageFields)-1)+
+                    " != "+
+                    strconv.Itoa(len(listenerFields)-1),
             )
             return
         }

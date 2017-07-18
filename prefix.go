@@ -1,19 +1,18 @@
 package equinox
 
 import (
-    "code.lukas.moe/x/wormhole"
     "strings"
 )
 
 // PrefixHandler is used to check if  any prefix is available (eg for server based prefixes.
-// If a prefix is found the function should return a wormhole to the string.
-// If not a wormhole to "NO_PREFIX_FOUND" is expected
+// If a prefix is found the function should return an interface to the string.
+// If not an interface to "NO_PREFIX_FOUND" is expected
 type PrefixHandler func(args ...interface{}) interface{}
 
-// NewStaticPrefix constructs a PrefixHandler that always returns a wormhole to $prefix.
+// NewStaticPrefix constructs a PrefixHandler that always returns an interface to $prefix.
 func NewStaticPrefix(prefix string) PrefixHandler {
     return func(args ...interface{}) interface{} {
-        return wormhole.ToString(prefix)
+        return prefix
     }
 }
 
