@@ -3,6 +3,7 @@ package slack_adapter
 import (
     "code.lukas.moe/x/equinox"
     "github.com/nlopes/slack"
+    "code.lukas.moe/x/equinox/caches"
 )
 
 func IsDMOrPrefixed(args ...interface{}) equinox.AdapterEvent {
@@ -14,8 +15,8 @@ func IsDMOrPrefixed(args ...interface{}) equinox.AdapterEvent {
 }
 
 func IsDM(args ...interface{}) equinox.AdapterEvent {
-    rtm := equinox.GetSession().(*slack.RTM)
-    m := args[2].(*slack.MessageEvent)
+    rtm := caches.Get(caches.SESSION).(*slack.RTM)
+    m := args[0].(*slack.MessageEvent)
 
     _, _, ch, e := rtm.OpenIMChannel(m.User)
     if e != nil {

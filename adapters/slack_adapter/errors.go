@@ -5,6 +5,7 @@ import (
     "fmt"
     "github.com/nlopes/slack"
     "runtime"
+    "code.lukas.moe/x/equinox/caches"
 )
 
 func ParseErrorHandler(command string, msg interface{}, err interface{}) {
@@ -25,8 +26,8 @@ func ParseErrorHandler(command string, msg interface{}, err interface{}) {
 
 func NewPanicHandler(message string, appendix string, userCodeblock bool) equinox.PanicHandler {
     return func(err interface{}, withTrace bool, args ...interface{}) {
-        msg := args[0].AsBox().(*slack.MessageEvent)
-        rtm := equinox.GetSession().(*slack.RTM)
+        msg := args[0].(*slack.MessageEvent)
+        rtm := caches.Get(caches.SESSION).(*slack.RTM)
         trace := ""
 
         if withTrace {

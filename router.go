@@ -11,7 +11,6 @@ import (
 
 // Sends an event to all registered listeners.
 // If non are registered it will emit a NO_HANDLERS_REGISTERED.
-
 func (r *Router) Dispatch(e Event, args ...interface{}) (ret AdapterEvent) {
     ret = NO_HANDLERS_REGISTERED
 
@@ -68,7 +67,7 @@ func (r *Router) Handle(msg string, input interface{}) {
     defer debugDefer()
     defer AdapterPanicHandler()
 
-    r.Dispatch(MESSAGE_PRE_ANALYZE, r, msg, input).Act()
+    r.Dispatch(MESSAGE_PRE_ANALYZE, input).Act()
     r.Dispatch(MESSAGE_ANALYZE, input).Act()
 
     // Split message into fields

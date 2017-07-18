@@ -3,13 +3,14 @@ package discord_adapter
 import (
     "code.lukas.moe/x/equinox"
     "github.com/bwmarrin/discordgo"
+    "code.lukas.moe/x/equinox/caches"
 )
 
 func IgnorePrivateMessages(args ...interface{}) equinox.AdapterEvent {
+    session := caches.Get(caches.SESSION).(*discordgo.Session)
     input := args[0].(*discordgo.MessageCreate)
-    session := args[1].(*discordgo.Session)
 
-    channel, err := session.Channel(input.ChannelID)
+    channel, err := session.State.Channel(input.ChannelID)
     if err != nil {
         return equinox.STOP_EXECUTION
     }

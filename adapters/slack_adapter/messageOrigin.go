@@ -3,11 +3,12 @@ package slack_adapter
 import (
     "code.lukas.moe/x/equinox"
     "github.com/nlopes/slack"
+    "code.lukas.moe/x/equinox/caches"
 )
 
 func IgnorePrivateMessages(args ...interface{}) equinox.AdapterEvent {
     input := args[0].(*slack.MessageEvent)
-    session := equinox.(*slack.RTM)
+    session := caches.Get(caches.SESSION).(*slack.RTM)
 
     channel, err := session.GetChannelInfo(input.Channel)
     if err != nil {
