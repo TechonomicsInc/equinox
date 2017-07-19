@@ -7,7 +7,9 @@ import (
 // Handler defines the basic layout of Handler structs
 type Handler interface {
     // Called after the handler is registered through AddRoute()
-    Init()
+    Init(
+        session interface{},
+    )
 
     // Called to retrieve the Listener patterns
     Listeners() []*Listener
@@ -17,14 +19,18 @@ type Handler interface {
         command string,
         content string,
         params map[string]string,
-        msg interface{},
+        wmsg interface{},
+        wsession interface{},
     )
 }
 
 // Listener is a simple container that may either hold a string-pattern or a RegExp object
 type Listener struct {
-    IsRegexp bool
     Content  string
+}
+
+type RegexListener struct {
+    Listener
 }
 
 // TODO: write docs about the most important thing in equinox ._.

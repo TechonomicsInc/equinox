@@ -7,6 +7,7 @@ import (
     "strconv"
     "strings"
     "time"
+    "code.lukas.moe/x/equinox/caches"
 )
 
 // Sends an event to all registered listeners.
@@ -76,7 +77,7 @@ func (r *Router) Handle(msg string, input interface{}) {
     // Loop through all listeners
     for listener, handlers := range r.Routes {
         // Check if the listener is a RegExp
-        if listener.IsRegexp {
+        if reflect.TypeOf(listener).Name() == "RegexpListener" {
             expr := listener.Content
             if strings.Contains(expr, "{p}") {
                 expr = strings.Replace(expr, "{p}", r.prefixHandler().(string), 1)
@@ -243,5 +244,5 @@ func (r *Router) execHandler(
     }
 
     // Call action
-    handler.Action(command, content, actionParams, input)
+    handler.Action(command, content, actionParams, input, caches.Get(caches.SESSION))
 }

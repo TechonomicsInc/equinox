@@ -2,6 +2,7 @@ package equinox
 
 import (
     "fmt"
+    "code.lukas.moe/x/equinox/caches"
 )
 
 // NewRouter constructs a router object with some default adapters
@@ -45,7 +46,7 @@ func (r *Router) AddRoute(handler Handler) {
         }
     }
 
-    handler.Init()
+    handler.Init(caches.Get(caches.SESSION))
 }
 
 // RegisterAdapter registers adapter F for event E
