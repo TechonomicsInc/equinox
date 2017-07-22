@@ -27,7 +27,7 @@ func ParseErrorHandler(command string, msg interface{}, err interface{}) {
 func NewPanicHandler(message string, appendix string, userCodeblock bool) equinox.PanicHandler {
     return func(err interface{}, withTrace bool, args ...interface{}) {
         msg := args[0].(*slack.MessageEvent)
-        rtm := caches.Get(caches.SESSION).(*slack.RTM)
+        rtm := caches.Session().(*slack.RTM)
         trace := ""
 
         if withTrace {

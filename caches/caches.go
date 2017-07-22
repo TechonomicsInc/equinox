@@ -1,24 +1,24 @@
 package caches
 
 import (
-    "time"
     "sync"
+    "time"
 )
 
 const (
-    DEFAULT_CACHE_EXPIRATION = int64(15*time.Minute)
+    DEFAULT_CACHE_EXPIRATION = int64(15 * time.Minute)
 )
 
 var (
-    mutex     sync.RWMutex
-    container map[string]*Item
+    mutex     = sync.RWMutex{}
+    container = map[string]*Item{}
 )
 
-func Get(id string) interface {} {
+func Get(id string) interface{} {
     mutex.RLock()
 
-    item, err := container[id]
-    if err {
+    item, ok := container[id]
+    if !ok {
         return nil
     }
 
@@ -47,4 +47,15 @@ func Cleanup() {
 
         delete(container, key)
     }
+}
+
+func Session() interface{} {
+    return Get("session")
+}
+
+func SetSession(session interface{}) {
+    Set(
+        "session",
+        NewItem(session).SetTimeout(NO_TIMEOUT),
+    )
 }

@@ -7,7 +7,7 @@ import (
 )
 
 func StartTyping(args ...interface{}) equinox.AdapterEvent {
-    session := caches.Get(caches.SESSION).(*discordgo.Session)
+    session := caches.Session().(*discordgo.Session)
 
     session.ChannelTyping(args[0].(string))
 

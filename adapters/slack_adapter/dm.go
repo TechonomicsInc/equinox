@@ -15,7 +15,7 @@ func IsDMOrPrefixed(args ...interface{}) equinox.AdapterEvent {
 }
 
 func IsDM(args ...interface{}) equinox.AdapterEvent {
-    rtm := caches.Get(caches.SESSION).(*slack.RTM)
+    rtm := caches.Session().(*slack.RTM)
     m := args[0].(*slack.MessageEvent)
 
     _, _, ch, e := rtm.OpenIMChannel(m.User)

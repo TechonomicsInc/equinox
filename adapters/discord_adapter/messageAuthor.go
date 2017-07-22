@@ -6,7 +6,7 @@ import (
 )
 
 func IgnoreOtherBots(args ...interface{}) equinox.AdapterEvent {
-    input := args[0].(*discordgo.MessageCreate)
+    input := args[0].(*discordgo.Message)
 
     if input.Author.Bot {
         return equinox.STOP_EXECUTION
@@ -16,7 +16,7 @@ func IgnoreOtherBots(args ...interface{}) equinox.AdapterEvent {
 }
 
 func IgnoreGroupMentions(args ...interface{}) equinox.AdapterEvent {
-    input := args[0].(*discordgo.MessageCreate)
+    input := args[0].(*discordgo.Message)
 
     if input.MentionEveryone {
         return equinox.STOP_EXECUTION

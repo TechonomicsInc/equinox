@@ -2,7 +2,6 @@ package equinox
 
 import (
     "fmt"
-    "code.lukas.moe/x/equinox/caches"
 )
 
 // NewRouter constructs a router object with some default adapters
@@ -34,7 +33,15 @@ func (r *Router) AddRoute(handler Handler) {
     r.Lock()
     defer r.Unlock()
 
+    OnDebug(func() {
+        logf("Registered handler %s", TypeOf(handler))
+    })
+
     for _, l := range (handler).Listeners() {
+        OnDebug(func() {
+            logf("--- Found listener: %s", l.Content)
+        })
+
         if _, ok := r.Routes[l]; !ok {
             r.Routes[l] = append(r.Routes[l], handler)
         } else {
@@ -46,7 +53,7 @@ func (r *Router) AddRoute(handler Handler) {
         }
     }
 
-    handler.Init(caches.Get(caches.SESSION))
+    handler.Init()
 }
 
 // RegisterAdapter registers adapter F for event E

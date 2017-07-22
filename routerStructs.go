@@ -7,9 +7,7 @@ import (
 // Handler defines the basic layout of Handler structs
 type Handler interface {
     // Called after the handler is registered through AddRoute()
-    Init(
-        session interface{},
-    )
+    Init()
 
     // Called to retrieve the Listener patterns
     Listeners() []*Listener
@@ -24,13 +22,33 @@ type Handler interface {
     )
 }
 
-// Listener is a simple container that may either hold a string-pattern or a RegExp object
 type Listener struct {
     Content  string
+    IsRegexp bool
 }
 
-type RegexListener struct {
-    Listener
+func NewListener(content string) *Listener {
+    return &Listener{
+        Content: content,
+        IsRegexp: false,
+    }
+}
+
+func NewRegexListener(content string) *Listener {
+    return &Listener{
+        Content: content,
+        IsRegexp: true,
+    }
+}
+
+func BulkRegister(fn func(string)(*Listener), contents []string) []*Listener {
+    listeners := []*Listener{}
+
+    for _, content := range contents {
+        listeners = append(listeners, fn(content))
+    }
+
+    return listeners
 }
 
 // TODO: write docs about the most important thing in equinox ._.

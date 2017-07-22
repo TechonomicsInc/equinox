@@ -1,5 +1,7 @@
 package equinox
 
+import "reflect"
+
 // POGOFunc is a void func without parameters
 type POGOFunc func()
 
@@ -17,3 +19,13 @@ func NOOPW1(arg interface{}) {}
 
 // A NOOP that satiesfies POGOFuncWV
 func NOOPWV(args ...interface{}) {}
+
+func TypeOf(v interface{}) string {
+    t := reflect.TypeOf(v)
+
+    if t.Kind() == reflect.Ptr {
+        return "*" + t.Elem().Name()
+    }
+
+    return t.Name()
+}

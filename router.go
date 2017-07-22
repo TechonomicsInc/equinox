@@ -244,5 +244,5 @@ func (r *Router) execHandler(
     }
 
     // Call action
-    handler.Action(command, content, actionParams, input, caches.Get(caches.SESSION))
+    handler.Action(command, content, actionParams, input, caches.Session())
 }

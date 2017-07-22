@@ -7,7 +7,7 @@ import (
 )
 
 func StartTyping(args ...interface{}) equinox.AdapterEvent {
-    session := caches.Get(caches.SESSION).(*slack.RTM)
+    session := caches.Session().(*slack.RTM)
 
     session.SendMessage(session.NewTypingMessage(
         args[0].(*slack.MessageEvent).Channel,
