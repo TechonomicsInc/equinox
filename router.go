@@ -83,14 +83,29 @@ func (r *Router) Handle(input *discordgo.Message) {
     defer debugDefer()
     defer AdapterPanicHandler()
 
-    r.Dispatch(MESSAGE_PRE_ANALYZE, input)
+    r.Dispatch(MESSAGE_PRE_ANALYZE, input).Act()
     defer r.Dispatch(MESSAGE_POST_ANALYZE, input)
 
     // Check if the message contains a mention for us
-    if len(input.Mentions) > 0 && strings.HasPrefix(input.Content, "<@"+caches.Session().State.User.ID+">") {
+    ourMention := "<@" + caches.Session().State.User.ID + ">"
+    if len(input.Mentions) > 0 && strings.HasPrefix(input.Content, ourMention) {
         r.Dispatch(MENTION_FOUND, input)
 
-        // TODO: Search for {@} registers here
+        // Dissect the message
+        parts := strings.Fields(input.Content)
+        cmd := parts[1]
+        content := strings.Join(parts[2:], " ")
+
+        // Check if a handler for this is present
+        handler, ok := r.Routes["{@}"+cmd]
+        if !ok {
+            r.Dispatch(LAST_RESORT_PRE_EXECUTE, input).Act()
+            r.lastResort(input)
+            r.Dispatch(LAST_RESORT_POST_EXECUTE, input).Act()
+            return
+        }
+
+        go r.execHandler(handler, input, cmd, content, map[string]string{})
         return
     }
 
@@ -106,35 +121,23 @@ func (r *Router) Handle(input *discordgo.Message) {
         return
     }
 
-    // Split the message into parts
+    // Dissect the message
     parts := strings.Fields(input.Content)
-
-    // Save a sanitized version of the command
     cmd := strings.Replace(parts[0], prefix, "", 1)
+    content := strings.Join(parts[1:], " ")
 
-    // Seperate arguments from the command
-    content := strings.TrimSpace(strings.Replace(input.Content, prefix+cmd, "", -1))
-
-    r.Dispatch(MESSAGE_ANALYZE, input)
+    r.Dispatch(MESSAGE_ANALYZE, input).Act()
 
     OnDebug(func() {
-        log("CMD: '" + cmd + "'")
-        log("CONTENT: '" + content + "'")
+        log("[CMD] '" + cmd + "'")
+        log("[CNT] '" + content + "'")
     })
 
     // Check if a handler for that command is present
     handler, ok := r.Routes["{p}"+cmd]
     if !ok {
-        OnDebug(func() {
-            log("No handler found.")
-        })
         return
     }
-    OnDebug(func() {
-        log("Handler found.")
-    })
-
-    r.Dispatch(MESSAGE_POST_ANALYZE, input)
 
     // Execute
     go r.execHandler(handler, input, cmd, content, map[string]string{})
