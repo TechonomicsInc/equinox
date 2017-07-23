@@ -4,6 +4,7 @@ import (
     "fmt"
     "strings"
     "code.lukas.moe/x/equinox/caches"
+    "regexp"
 )
 
 // NewRouter constructs a router object with some default adapters
@@ -40,9 +41,18 @@ func (r *Router) AddRoute(handler Handler) {
         logf("Registering handler %s", TypeOf(handler))
     })
 
+    paramExpression := regexp.MustCompile(`\{(.*?)}`)
+
     for _, l := range handler.Listeners() {
         parts := strings.Fields(l)
         l = parts[0]
+
+        // Perform parameter expansion if needed
+        lExprs := strings.Split(
+            paramExpression.FindAllStringSubmatch(l, -1)[0][1],
+            ",",
+        )
+        l = paramExpression.ReplaceAllString(l, "")
 
         if len(parts) > 1 {
             parts = parts[1:]
@@ -50,19 +60,23 @@ func (r *Router) AddRoute(handler Handler) {
             parts = []string{}
         }
 
-        OnDebug(func() {
-            logf("--- Found listener: %s", l)
-        })
+        for _, lExpr := range lExprs {
+            lt := "{" + lExpr + "}" + l
 
-        if _, ok := r.Routes[l]; !ok {
-            r.Routes[l] = handler
-            r.RouteMeta[l] = ListenerMeta{Expression: parts}
-        } else {
-            panic(fmt.Errorf(
-                "Tried to add duplicate route %s with handler \n%#v",
-                l,
-                handler,
-            ))
+            OnDebug(func() {
+                logf("--- Found listener: %s", lt)
+            })
+
+            if _, ok := r.Routes[lt]; !ok {
+                r.Routes[lt] = handler
+                r.RouteMeta[lt] = ListenerMeta{Expression: parts}
+            } else {
+                panic(fmt.Errorf(
+                    "Tried to add duplicate route %s with handler \n%#v",
+                    lt,
+                    handler,
+                ))
+            }
         }
     }
 

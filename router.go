@@ -38,7 +38,7 @@ func (r *Router) Dispatch(e Event, input *discordgo.Message) (ret AdapterEvent) 
             parts := strings.Split(handlerName, "/")
             handlerName = parts[len(parts)-1]
 
-            logf("[DISPATCHER][EVT] %v -> %v", e.String(), handlerName)
+            logf("[DISPATCH][%s][EVENT ] %v -> %v", input.ID, e.String(), handlerName)
             start = float64(time.Now().UnixNano())
         })
 
@@ -47,9 +47,8 @@ func (r *Router) Dispatch(e Event, input *discordgo.Message) (ret AdapterEvent) 
         OnDebug(func() {
             end = float64(time.Now().UnixNano())
 
-            logf("[DISPATCHER][RET] %v", ret.String())
-            logf("[DISPATCHER][CLK] Call took %f ms", (end-start)/float64(time.Millisecond))
-            log("")
+            logf("[DISPATCH][%s][RETURN] %v", input.ID, ret.String())
+            logf("[DISPATCH][%s][TIMING] Call took %f ms", input.ID, (end-start)/float64(time.Millisecond))
         })
 
         if ret.ShouldAbort() {
@@ -70,13 +69,13 @@ func (r *Router) Handle(input *discordgo.Message) {
     )
 
     OnDebug(func() {
-        logf("[DISPATCHER] Handle(%s) was called", input.ID)
+        logf("[HANDLE  ][%s] Handle() was called", input.ID)
 
         start = float64(time.Now().UnixNano())
 
         debugDefer = func() {
             end = float64(time.Now().UnixNano())
-            logf("[DISPATCHER] Handle(%s) call took %f ms", input.ID, (end-start)/float64(time.Millisecond))
+            logf("[HANDLE  ][%s] Handle() call took %f ms", input.ID, (end-start)/float64(time.Millisecond))
         }
     })
 
@@ -116,21 +115,18 @@ func (r *Router) Handle(input *discordgo.Message) {
         return
     }
 
-    // Check if the message contains the prefix
-    if !strings.HasPrefix(input.Content, prefix) {
-        return
-    }
+    // Do some message analyzing checks
+    // For example: Check if the message contains the prefix
+    r.Dispatch(MESSAGE_ANALYZE, input).Act()
 
     // Dissect the message
     parts := strings.Fields(input.Content)
     cmd := strings.Replace(parts[0], prefix, "", 1)
     content := strings.Join(parts[1:], " ")
 
-    r.Dispatch(MESSAGE_ANALYZE, input).Act()
-
     OnDebug(func() {
-        log("[CMD] '" + cmd + "'")
-        log("[CNT] '" + content + "'")
+        logf("[HANDLE  ][%s][COMMAND] '%s'", input.ID, cmd)
+        logf("[HANDLE  ][%s][CONTENT] '%s'", input.ID, content)
     })
 
     // Check if a handler for that command is present
