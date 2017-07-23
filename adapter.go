@@ -2,10 +2,11 @@ package equinox
 
 import (
     "fmt"
+    "github.com/bwmarrin/discordgo"
 )
 
 // AdapterFunc defines a function that takes N interfaces and returns an AdapterEvent
-type AdapterFunc func(args ...interface{}) AdapterEvent
+type AdapterFunc func(msg *discordgo.Message) AdapterEvent
 
 // AdapterPanic is thrown by adapters to indicate which Event caused the panic
 type AdapterPanic struct {
@@ -21,7 +22,7 @@ func AdapterPanicHandler() {
         if ok {
             OnDebug(func() {
                 log("Caught AdapterPanic")
-                fmt.Printf("%#v", exc)
+                fmt.Printf("%#v\n", exc)
             })
 
             if exc.Event != PANIC {

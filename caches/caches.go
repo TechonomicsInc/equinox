@@ -3,10 +3,7 @@ package caches
 import (
     "sync"
     "time"
-)
-
-const (
-    DEFAULT_CACHE_EXPIRATION = int64(15 * time.Minute)
+    "github.com/bwmarrin/discordgo"
 )
 
 var (
@@ -15,24 +12,28 @@ var (
 )
 
 func Get(id string) interface{} {
-    mutex.RLock()
+    mutex.Lock()
 
     item, ok := container[id]
     if !ok {
+        mutex.Unlock()
         return nil
     }
+
+    item.LastAccess = time.Now().Unix()
+    mutex.Unlock()
 
     if item.IsExpired() {
         defer Cleanup()
     }
 
-    defer mutex.RUnlock()
     return item.Content
 }
 
 func Set(id string, item *Item) {
     mutex.Lock()
     container[id] = item
+    container[id].LastAccess = time.Now().Unix()
     mutex.Unlock()
 }
 
@@ -49,11 +50,11 @@ func Cleanup() {
     }
 }
 
-func Session() interface{} {
-    return Get("session")
+func Session() *discordgo.Session {
+    return Get("session").(*discordgo.Session)
 }
 
-func SetSession(session interface{}) {
+func SetSession(session *discordgo.Session) {
     Set(
         "session",
         NewItem(session).SetTimeout(NO_TIMEOUT),

@@ -2,17 +2,16 @@ package equinox
 
 import (
     "reflect"
-    "regexp"
     "runtime"
-    "strconv"
     "strings"
     "time"
     "code.lukas.moe/x/equinox/caches"
+    "github.com/bwmarrin/discordgo"
 )
 
 // Sends an event to all registered listeners.
 // If non are registered it will emit a NO_HANDLERS_REGISTERED.
-func (r *Router) Dispatch(e Event, args ...interface{}) (ret AdapterEvent) {
+func (r *Router) Dispatch(e Event, input *discordgo.Message) (ret AdapterEvent) {
     ret = NO_HANDLERS_REGISTERED
 
     // Check if any handlers are defined
@@ -27,16 +26,30 @@ func (r *Router) Dispatch(e Event, args ...interface{}) (ret AdapterEvent) {
 
     // Loop through the handlers
     for _, handler := range r.EventHandlers[e] {
-
-        ret = handler(args...)
+        var (
+            handlerName string
+            start       float64
+            end         float64
+        )
 
         OnDebug(func() {
-            handlerName := runtime.FuncForPC(reflect.ValueOf(handler).Pointer()).Name()
-            handlerName = strings.Replace(handlerName, "code.lukas.moe", "", -1)
-            handlerName = strings.Replace(handlerName, "/x/", "", -1)
-            handlerName = strings.Replace(handlerName, "equinox/", "", -1)
+            handlerName = runtime.FuncForPC(reflect.ValueOf(handler).Pointer()).Name()
 
-            logf("[DISPATCHER] %v -> %v -> %v", e.String(), handlerName, ret.String())
+            parts := strings.Split(handlerName, "/")
+            handlerName = parts[len(parts)-1]
+
+            logf("[DISPATCHER][EVT] %v -> %v", e.String(), handlerName)
+            start = float64(time.Now().UnixNano())
+        })
+
+        ret = handler(input)
+
+        OnDebug(func() {
+            end = float64(time.Now().UnixNano())
+
+            logf("[DISPATCHER][RET] %v", ret.String())
+            logf("[DISPATCHER][CLK] Call took %f ms", (end-start)/float64(time.Millisecond))
+            log("")
         })
 
         if ret.ShouldAbort() {
@@ -50,179 +63,87 @@ func (r *Router) Dispatch(e Event, args ...interface{}) (ret AdapterEvent) {
 // Handle takes an incoming message and the corresponding object.
 // The message is parsed according to all registered handlers and if one of them matches
 // they will be executed in the execHandler() sandbox.
-func (r *Router) Handle(msg string, input interface{}) {
+func (r *Router) Handle(input *discordgo.Message) {
     var (
         start, end float64
         debugDefer = func() {}
     )
 
     OnDebug(func() {
+        logf("[DISPATCHER] Handle(%s) was called", input.ID)
+
         start = float64(time.Now().UnixNano())
 
         debugDefer = func() {
             end = float64(time.Now().UnixNano())
-            logf("[DISPATCHER] Handle() call took %f ms", (end-start)/float64(time.Millisecond))
+            logf("[DISPATCHER] Handle(%s) call took %f ms", input.ID, (end-start)/float64(time.Millisecond))
         }
     })
 
     defer debugDefer()
     defer AdapterPanicHandler()
 
-    r.Dispatch(MESSAGE_PRE_ANALYZE, input).Act()
-    r.Dispatch(MESSAGE_ANALYZE, input).Act()
+    r.Dispatch(MESSAGE_PRE_ANALYZE, input)
+    defer r.Dispatch(MESSAGE_POST_ANALYZE, input)
 
-    // Split message into fields
-    messageFields := strings.Fields(msg)
+    // Check if the message contains a mention for us
+    if len(input.Mentions) > 0 && strings.HasPrefix(input.Content, "<@"+caches.Session().State.User.ID+">") {
+        r.Dispatch(MENTION_FOUND, input)
 
-    // Loop through all listeners
-    for listener, handlers := range r.Routes {
-        // Check if the listener is a RegExp
-        if reflect.TypeOf(listener).Name() == "RegexpListener" {
-            expr := listener.Content
-            if strings.Contains(expr, "{p}") {
-                expr = strings.Replace(expr, "{p}", r.prefixHandler().(string), 1)
-            }
-            regex := regexp.MustCompile(expr)
-
-            if regex.MatchString(msg) {
-                OnDebug(func() {
-                    logf("[LISTENER] Triggered %s", expr)
-                })
-
-                // Extract matches using regex
-                matchMap := map[string]string{}
-                matches := regex.FindAllString(msg, -1)
-
-                // Convert array to a map
-                for i, match := range matches {
-                    matchMap["match_"+strconv.Itoa(i)] = match
-                }
-
-                r.Dispatch(MESSAGE_POST_ANALYZE, input).Act()
-
-                // If it's a matching regexp call all handlers
-                for _, handler := range handlers {
-                    go r.execHandler(
-                        handler,
-                        input,
-                        messageFields[0],
-                        strings.Join(messageFields[1:], " "),
-                        matchMap,
-                    )
-                }
-
-                // Kill outer loop because of the match
-                return
-            }
-        }
-
-        // Split the listener into fields
-        listenerFields := strings.Fields(listener.Content)
-
-        // Check if the handler expects @mentions
-        if strings.Contains(listenerFields[0], "{@}") {
-            // Check if any mentions are present
-            r.Dispatch(MESSAGE_CHECK_MENTIONS, input).Act()
-
-            // Check if mentions for us are present
-            r.Dispatch(MESSAGE_CHECK_OUR_MENTIONS, input).Act()
-
-            r.Dispatch(MESSAGE_POST_ANALYZE, input).Act()
-
-            // If mentions are present call the module
-            for _, handler := range handlers {
-                OnDebug(func() {
-                    logf("[LISTENER] Triggered %s", listenerFields[0])
-                })
-                go r.execHandler(handler, input, messageFields[0], strings.Join(messageFields[1:], " "), nil)
-            }
-
-            // Kill outer loop
-            return
-        }
-
-        // Replace the prefix-placeholder if present
-        if strings.Contains(listenerFields[0], "{p}") {
-            listenerFields[0] = strings.Replace(listenerFields[0], "{p}", r.prefixHandler().(string), -1)
-        }
-
-        // Skip iteration if the current listener doesn't match
-        if messageFields[0] != listenerFields[0] {
-            continue
-        }
-
-        // Prepare container vars for command parsing
-        actionParams := map[string]string{}
-        i := 0
-
-        // If the message contains less fields than the listener try send an error
-        if len(messageFields) < len(listenerFields) {
-            r.parseErrorHandler(
-                messageFields[0],
-                input,
-                "Argument count mismatch.\n"+
-                    strconv.Itoa(len(messageFields)-1)+
-                    " != "+
-                    strconv.Itoa(len(listenerFields)-1),
-            )
-            return
-        }
-
-        for i = 0; i < len(listenerFields); i++ {
-            key := listenerFields[i]
-            key = strings.Replace(key, "{", "", 1)
-            key = strings.Replace(key, "}", "", 1)
-
-            actionParams[key] = messageFields[i]
-        }
-
-        // Append unparsed text to the map
-        unparsed := []string{}
-        for ; i < len(messageFields); i++ {
-            unparsed = append(unparsed, messageFields[i])
-        }
-
-        actionParams["unparsed"] = strings.Join(unparsed, " ")
-
-        // Replace prefix entry
-        actionParams["command"] = actionParams[messageFields[0]]
-        delete(actionParams, messageFields[0])
-
-        r.Dispatch(MESSAGE_POST_ANALYZE, input).Act()
-
-        // Call handlers
-        for _, handler := range handlers {
-            OnDebug(func() {
-                logf("[LISTENER] Triggered %s", listenerFields[0])
-            })
-            go r.execHandler(handler, input, messageFields[0], strings.Join(messageFields[1:], " "), actionParams)
-        }
-
-        // Exit outer loop
+        // TODO: Search for {@} registers here
         return
     }
 
-    // For some reason no message matched.
-    // Call our (sandboxed) last resort.
-    go func() {
-        r.Dispatch(LAST_RESORT_PRE_EXECUTE, input).Act()
-        defer func() {
-            e := recover()
-            if e != nil {
-                r.panicHandler(e, r.debugMode, input)
-                return
-            }
+    // Check if the message if prefixed for us
+    // First get the prefix
+    prefix := r.prefixHandler(input)
+    if prefix == "" {
+        return
+    }
 
-            r.Dispatch(LAST_RESORT_POST_EXECUTE, input)
-        }()
-        r.lastResort(input)
-    }()
+    // Check if the message contains the prefix
+    if !strings.HasPrefix(input.Content, prefix) {
+        return
+    }
+
+    // Split the message into parts
+    parts := strings.Fields(input.Content)
+
+    // Save a sanitized version of the command
+    cmd := strings.Replace(parts[0], prefix, "", 1)
+
+    // Seperate arguments from the command
+    content := strings.TrimSpace(strings.Replace(input.Content, prefix+cmd, "", -1))
+
+    r.Dispatch(MESSAGE_ANALYZE, input)
+
+    OnDebug(func() {
+        log("CMD: '" + cmd + "'")
+        log("CONTENT: '" + content + "'")
+    })
+
+    // Check if a handler for that command is present
+    handler, ok := r.Routes["{p}"+cmd]
+    if !ok {
+        OnDebug(func() {
+            log("No handler found.")
+        })
+        return
+    }
+    OnDebug(func() {
+        log("Handler found.")
+    })
+
+    r.Dispatch(MESSAGE_POST_ANALYZE, input)
+
+    // Execute
+    go r.execHandler(handler, input, cmd, content, map[string]string{})
 }
 
 // execHandler safely executes the passed handler and catches any possible panics
 func (r *Router) execHandler(
     handler Handler,
-    input interface{},
+    input *discordgo.Message,
     command string,
     content string,
     actionParams map[string]string,

@@ -2,53 +2,29 @@ package equinox
 
 import (
     "sync"
+    "github.com/bwmarrin/discordgo"
 )
 
 // Handler defines the basic layout of Handler structs
 type Handler interface {
     // Called after the handler is registered through AddRoute()
-    Init()
+    Init(session *discordgo.Session)
 
     // Called to retrieve the Listener patterns
-    Listeners() []*Listener
+    Listeners() []string
 
     // Called if any of the listeners matched
     Action(
         command string,
         content string,
         params map[string]string,
-        wmsg interface{},
-        wsession interface{},
+        msg *discordgo.Message,
+        session *discordgo.Session,
     )
 }
 
-type Listener struct {
-    Content  string
-    IsRegexp bool
-}
-
-func NewListener(content string) *Listener {
-    return &Listener{
-        Content: content,
-        IsRegexp: false,
-    }
-}
-
-func NewRegexListener(content string) *Listener {
-    return &Listener{
-        Content: content,
-        IsRegexp: true,
-    }
-}
-
-func BulkRegister(fn func(string)(*Listener), contents []string) []*Listener {
-    listeners := []*Listener{}
-
-    for _, content := range contents {
-        listeners = append(listeners, fn(content))
-    }
-
-    return listeners
+type ListenerMeta struct {
+    Expression []string
 }
 
 // TODO: write docs about the most important thing in equinox ._.
@@ -63,5 +39,10 @@ type Router struct {
     parseErrorHandler ParseErrorHandler
 
     EventHandlers map[Event][]AdapterFunc
-    Routes        map[*Listener][]Handler
+
+    // map of command -> handlers
+    Routes map[string]Handler
+
+    // map of command -> expression
+    RouteMeta map[string]ListenerMeta
 }

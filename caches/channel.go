@@ -1,19 +1,18 @@
-package discord_caches
+package caches
 
 import (
-    "code.lukas.moe/x/equinox/caches"
     "github.com/bwmarrin/discordgo"
 )
 
 func GetChannel(id string) (*discordgo.Channel, error) {
-    ch := caches.Get(id)
+    ch := Get(id)
     if ch != nil {
         return ch.(*discordgo.Channel), nil
     }
 
-    ch, err := caches.Session().(*discordgo.Session).Channel(id)
-    if err != nil {
-        caches.Set(id, caches.NewItem(ch))
+    ch, err := Session().Channel(id)
+    if err == nil {
+        Set(id, NewItem(ch))
         return ch.(*discordgo.Channel), nil
     }
 
@@ -21,14 +20,14 @@ func GetChannel(id string) (*discordgo.Channel, error) {
 }
 
 func GetGuild(id string) (*discordgo.Guild, error) {
-    ch := caches.Get(id)
+    ch := Get(id)
     if ch != nil {
         return ch.(*discordgo.Guild), nil
     }
 
-    ch, err := caches.Session().(*discordgo.Session).Channel(id)
-    if err != nil {
-        caches.Set(id, caches.NewItem(ch))
+    ch, err := Session().Channel(id)
+    if err == nil {
+        Set(id, NewItem(ch))
         return ch.(*discordgo.Guild), nil
     }
 
@@ -36,14 +35,14 @@ func GetGuild(id string) (*discordgo.Guild, error) {
 }
 
 func GetUser(id string) (*discordgo.User, error) {
-    ch := caches.Get(id)
+    ch := Get(id)
     if ch != nil {
         return ch.(*discordgo.User), nil
     }
 
-    ch, err := caches.Session().(*discordgo.Session).User(id)
-    if err != nil {
-        caches.Set(id, caches.NewItem(ch))
+    ch, err := Session().User(id)
+    if err == nil {
+        Set(id, NewItem(ch))
         return ch.(*discordgo.User), nil
     }
 

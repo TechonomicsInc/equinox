@@ -2,6 +2,8 @@ package equinox
 
 import (
     "fmt"
+    "strings"
+    "code.lukas.moe/x/equinox/caches"
 )
 
 // NewRouter constructs a router object with some default adapters
@@ -10,7 +12,8 @@ func NewRouter() *Router {
 
     r.Lock()
     r.EventHandlers = make(map[Event][]AdapterFunc)
-    r.Routes = make(map[*Listener][]Handler)
+    r.Routes = make(map[string]Handler)
+    r.RouteMeta = make(map[string]ListenerMeta)
     r.Unlock()
 
     r.UseDebugMode(false)
@@ -34,16 +37,26 @@ func (r *Router) AddRoute(handler Handler) {
     defer r.Unlock()
 
     OnDebug(func() {
-        logf("Registered handler %s", TypeOf(handler))
+        logf("Registering handler %s", TypeOf(handler))
     })
 
-    for _, l := range (handler).Listeners() {
+    for _, l := range handler.Listeners() {
+        parts := strings.Fields(l)
+        l = parts[0]
+
+        if len(parts) > 1 {
+            parts = parts[1:]
+        } else {
+            parts = []string{}
+        }
+
         OnDebug(func() {
-            logf("--- Found listener: %s", l.Content)
+            logf("--- Found listener: %s", l)
         })
 
         if _, ok := r.Routes[l]; !ok {
-            r.Routes[l] = append(r.Routes[l], handler)
+            r.Routes[l] = handler
+            r.RouteMeta[l] = ListenerMeta{Expression: parts}
         } else {
             panic(fmt.Errorf(
                 "Tried to add duplicate route %s with handler \n%#v",
@@ -53,7 +66,7 @@ func (r *Router) AddRoute(handler Handler) {
         }
     }
 
-    handler.Init()
+    handler.Init(caches.Session())
 }
 
 // RegisterAdapter registers adapter F for event E

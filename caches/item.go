@@ -4,6 +4,7 @@ import "time"
 
 const (
     NO_TIMEOUT = -1
+    DEFAULT_CACHE_EXPIRATION = int64(15 * time.Minute)
 )
 
 type Item struct {
@@ -15,6 +16,7 @@ type Item struct {
 func NewItem(content interface{}) *Item {
     return &Item{
         Content: content,
+        LastAccess: time.Now().Unix(),
         Timeout: DEFAULT_CACHE_EXPIRATION,
     }
 }
@@ -36,5 +38,5 @@ func (i *Item) IsExpired() bool {
         return false
     }
 
-    return time.Now().UnixNano()-i.Timeout > i.LastAccess
+    return time.Now().Unix() > i.LastAccess + i.Timeout
 }
