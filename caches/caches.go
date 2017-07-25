@@ -12,19 +12,13 @@ var (
 )
 
 func Get(id string) interface{} {
-    mutex.Lock()
+    mutex.RLock()
+    defer TouchItem(id)
+    defer mutex.RUnlock()
 
     item, ok := container[id]
     if !ok {
-        mutex.Unlock()
         return nil
-    }
-
-    item.LastAccess = time.Now().Unix()
-    mutex.Unlock()
-
-    if item.IsExpired() {
-        defer Cleanup()
     }
 
     return item.Content
@@ -33,6 +27,12 @@ func Get(id string) interface{} {
 func Set(id string, item *Item) {
     mutex.Lock()
     container[id] = item
+    container[id].LastAccess = time.Now().Unix()
+    mutex.Unlock()
+}
+
+func TouchItem(id string) {
+    mutex.Lock()
     container[id].LastAccess = time.Now().Unix()
     mutex.Unlock()
 }
@@ -47,6 +47,13 @@ func Cleanup() {
         }
 
         delete(container, key)
+    }
+}
+
+func Manage() {
+    for {
+        time.Sleep(5 * time.Second)
+        Cleanup()
     }
 }
 
