@@ -17,7 +17,6 @@ type Handler interface {
     Action(
         command string,
         content string,
-        params map[string]string,
         msg *discordgo.Message,
         session *discordgo.Session,
     )

@@ -109,7 +109,7 @@ func (r *Router) Handle(input *discordgo.Message) {
             logf("[HANDLE  ][%s][CONTENT] '%s'", input.ID, content)
         })
 
-        go r.execHandler(handler, input, cmd, content, map[string]string{})
+        go r.execHandler(handler, input, cmd, content)
         return
     }
 
@@ -141,7 +141,7 @@ func (r *Router) Handle(input *discordgo.Message) {
     }
 
     // Execute
-    go r.execHandler(handler, input, cmd, content, map[string]string{})
+    go r.execHandler(handler, input, cmd, content)
 }
 
 // execHandler safely executes the passed handler and catches any possible panics
@@ -150,7 +150,6 @@ func (r *Router) execHandler(
     input *discordgo.Message,
     command string,
     content string,
-    actionParams map[string]string,
 ) {
     // Defer post-execute handlers
     defer func() {
@@ -169,5 +168,5 @@ func (r *Router) execHandler(
     }
 
     // Call action
-    handler.Action(command, content, actionParams, input, caches.Session())
+    handler.Action(command, content, input, caches.Session())
 }
