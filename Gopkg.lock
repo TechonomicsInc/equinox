@@ -15,25 +15,13 @@
 
 [[projects]]
   branch = "master"
-  name = "github.com/nlopes/slack"
-  packages = ["."]
-  revision = "ca8436d76f805ec1e682eaae2de3c3a9bc894b0f"
-
-[[projects]]
-  branch = "master"
   name = "golang.org/x/crypto"
   packages = ["nacl/secretbox","poly1305","salsa20/salsa"]
-  revision = "6914964337150723782436d56b3f21610a74ce7b"
-
-[[projects]]
-  branch = "master"
-  name = "golang.org/x/net"
-  packages = ["websocket"]
-  revision = "ab5485076ff3407ad2d02db054635913f017b0ed"
+  revision = "2faea1465de239e4babd8f5905cc25b781712442"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "e775780b99b215749d3aefc495625ff7df852322b5b1a49bd2cfe8ef6cf34615"
+  inputs-digest = "15579b9ace105c7e9149ae81a9381fac58b8c395ab6322bc620807c361e61d53"
   solver-name = "gps-cdcl"
   solver-version = 1
