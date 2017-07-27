@@ -26,15 +26,19 @@ func Get(id string) interface{} {
 
 func Set(id string, item *Item) {
     mutex.Lock()
+    defer TouchItem(id)
+    defer mutex.Unlock()
+
     container[id] = item
-    container[id].LastAccess = time.Now().Unix()
-    mutex.Unlock()
 }
 
 func TouchItem(id string) {
     mutex.Lock()
-    container[id].LastAccess = time.Now().Unix()
-    mutex.Unlock()
+    defer mutex.Unlock()
+
+    if item, ok := container[id]; ok {
+        item.LastAccess = time.Now().Unix()
+    }
 }
 
 func Cleanup() {

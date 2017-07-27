@@ -25,7 +25,7 @@ func GetGuild(id string) (*discordgo.Guild, error) {
         return ch.(*discordgo.Guild), nil
     }
 
-    ch, err := Session().Channel(id)
+    ch, err := Session().Guild(id)
     if err == nil {
         Set(id, NewItem(ch))
         return ch.(*discordgo.Guild), nil

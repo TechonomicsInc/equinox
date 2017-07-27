@@ -104,6 +104,11 @@ func (r *Router) Handle(input *discordgo.Message) {
             return
         }
 
+        OnDebug(func() {
+            logf("[HANDLE  ][%s][COMMAND] '%s'", input.ID, cmd)
+            logf("[HANDLE  ][%s][CONTENT] '%s'", input.ID, content)
+        })
+
         go r.execHandler(handler, input, cmd, content, map[string]string{})
         return
     }
