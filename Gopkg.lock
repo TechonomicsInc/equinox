@@ -5,7 +5,7 @@
   branch = "develop"
   name = "github.com/bwmarrin/discordgo"
   packages = ["."]
-  revision = "7bb0965a6ff435b2587c2a4c50e3a0fedbf9325b"
+  revision = "1b5dbef04ede707a410eb19a6e5683d5bdaaa538"
 
 [[projects]]
   name = "github.com/gorilla/websocket"
@@ -17,7 +17,7 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["nacl/secretbox","poly1305","salsa20/salsa"]
-  revision = "2faea1465de239e4babd8f5905cc25b781712442"
+  revision = "81e90905daefcd6fd217b62423c0908922eadb30"
 
 [solve-meta]
   analyzer-name = "dep"
