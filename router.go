@@ -87,29 +87,39 @@ func (r *Router) Handle(input *discordgo.Message) {
 
     // Check if the message contains a mention for us
     ourMention := "<@" + caches.Session().State.User.ID + ">"
-    if len(input.Mentions) > 0 && strings.HasPrefix(input.Content, ourMention) {
+    if len(input.Mentions) > 0 {
         r.Dispatch(MENTION_FOUND, input)
 
-        // Dissect the message
-        parts := strings.Fields(input.Content)
-        cmd := parts[1]
-        content := strings.Join(parts[2:], " ")
+        // If it looks like a command, search for a command.
+        // Otherwise call the last resort.
+        if strings.HasPrefix(input.Content, ourMention) {
+            // Dissect the message
+            parts := strings.Fields(input.Content)
+            cmd := parts[1]
+            content := strings.Join(parts[2:], " ")
 
-        // Check if a handler for this is present
-        handler, ok := r.Routes["{@}"+cmd]
-        if !ok {
-            r.Dispatch(LAST_RESORT_PRE_EXECUTE, input).Act()
-            r.lastResort(input)
-            r.Dispatch(LAST_RESORT_POST_EXECUTE, input).Act()
+            // Check if a handler for this is present
+            handler, ok := r.Routes["{@}"+cmd]
+            if !ok {
+                r.Dispatch(LAST_RESORT_PRE_EXECUTE, input).Act()
+                r.lastResort(input)
+                r.Dispatch(LAST_RESORT_POST_EXECUTE, input).Act()
+                return
+            }
+
+            OnDebug(func() {
+                logf("[HANDLE  ][%s][COMMAND] '%s'", input.ID, cmd)
+                logf("[HANDLE  ][%s][CONTENT] '%s'", input.ID, content)
+            })
+
+            go r.execHandler(handler, input, cmd, content)
             return
         }
 
-        OnDebug(func() {
-            logf("[HANDLE  ][%s][COMMAND] '%s'", input.ID, cmd)
-            logf("[HANDLE  ][%s][CONTENT] '%s'", input.ID, content)
-        })
-
-        go r.execHandler(handler, input, cmd, content)
+        // We have been mentioned but the message was neither a command
+        // nor a pre-mention that would've triggered the last resort.
+        // Dispatch an event just in case somebody needs that.
+        r.Dispatch(MENTION_UNMAPPED, input)
         return
     }
 

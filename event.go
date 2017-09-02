@@ -27,5 +27,9 @@ const (
     // Called after executing the last resort
     LAST_RESORT_POST_EXECUTE
 
+    // Called during message analysis when a @mention for us is encountered
     MENTION_FOUND
+
+    // Called when the bot is mentioned in a message that doesn't look like a command
+    MENTION_UNMAPPED
 )
