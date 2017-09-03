@@ -5,6 +5,7 @@ import (
     "strings"
     "code.lukas.moe/x/equinox/caches"
     "regexp"
+    "code.lukas.moe/x/equinox/annotations"
 )
 
 // NewRouter constructs a router object with some default adapters
@@ -14,7 +15,8 @@ func NewRouter() *Router {
     r.Lock()
     r.EventHandlers = make(map[Event][]AdapterFunc)
     r.Routes = make(map[string]Handler)
-    r.RouteMeta = make(map[string]ListenerMeta)
+    r.RuntimeAdapters = make(map[Handler][]RuntimeAdapter)
+    r.AnnotationHandlers = make(map[string][]AnnotationHandler)
     r.Unlock()
 
     r.UseDebugMode(false)
@@ -41,46 +43,70 @@ func (r *Router) AddRoute(handler Handler) {
         logf("Registering handler %s", TypeOf(handler))
     })
 
-    paramExpression := regexp.MustCompile(`\{(.*?)}`)
+    meta := annotations.Parse(handler.Meta())
+    for _, annotation := range meta {
+        switch annotation.Key {
+        case "PrefixListeners":
+            for _, listener := range annotation.Value {
+                r.addListener("{p}"+listener, handler)
+            }
 
-    for _, l := range handler.Listeners() {
-        parts := strings.Fields(l)
-        l = parts[0]
+        case "MentionListeners":
+            for _, listener := range annotation.Value {
+                r.addListener("{@}"+listener, handler)
+            }
 
-        // Perform parameter expansion if needed
-        lExprs := strings.Split(
-            paramExpression.FindAllStringSubmatch(l, -1)[0][1],
-            ",",
-        )
-        l = paramExpression.ReplaceAllString(l, "")
+        case "Listeners":
+            paramExpression := regexp.MustCompile(`{(.*?)}`)
 
-        if len(parts) > 1 {
-            parts = parts[1:]
-        } else {
-            parts = []string{}
-        }
+            for _, l := range annotation.Value {
+                parts := strings.Fields(l)
+                l = parts[0]
 
-        for _, lExpr := range lExprs {
-            lt := "{" + lExpr + "}" + l
+                // Perform parameter expansion if needed
+                lExprs := strings.Split(
+                    paramExpression.FindAllStringSubmatch(l, -1)[0][1],
+                    ",",
+                )
+                l = paramExpression.ReplaceAllString(l, "")
 
-            OnDebug(func() {
-                logf("--- Found listener: %s", lt)
-            })
+                if len(parts) > 1 {
+                    parts = parts[1:]
+                } else {
+                    parts = []string{}
+                }
 
-            if _, ok := r.Routes[lt]; !ok {
-                r.Routes[lt] = handler
-                r.RouteMeta[lt] = ListenerMeta{Expression: parts}
-            } else {
-                panic(fmt.Errorf(
-                    "Tried to add duplicate route %s with handler \n%#v",
-                    lt,
-                    handler,
-                ))
+                for _, lExpr := range lExprs {
+                    r.addListener("{"+lExpr+"}"+l, handler)
+                }
+            }
+
+        default:
+            if handlers, ok := r.AnnotationHandlers[annotation.Key]; ok {
+                for _, h := range handlers {
+                    h(annotation, handler, r)
+                }
             }
         }
     }
 
     handler.Init(caches.Session())
+}
+
+func (r *Router) addListener(listener string, handler Handler) {
+    OnDebug(func() {
+        logf("--- Found listener: %s", listener)
+    })
+
+    if _, ok := r.Routes[listener]; !ok {
+        r.Routes[listener] = handler
+    } else {
+        panic(fmt.Errorf(
+            "Tried to add duplicate route %s with handler \n%#v",
+            listener,
+            handler,
+        ))
+    }
 }
 
 // RegisterAdapter registers adapter F for event E
@@ -94,6 +120,30 @@ func (r *Router) RegisterAdapter(e Event, f AdapterFunc) {
     }
 
     r.EventHandlers[e] = append(r.EventHandlers[e], f)
+}
+
+func (r *Router) RegisterAnnotationHandler(annotation string, f AnnotationHandler) {
+    r.Lock()
+    defer r.Unlock()
+
+    _, ok := r.AnnotationHandlers[annotation]
+    if !ok {
+        r.AnnotationHandlers[annotation] = []AnnotationHandler{}
+    }
+
+    r.AnnotationHandlers[annotation] = append(r.AnnotationHandlers[annotation], f)
+}
+
+func (r *Router) RegisterRuntimeAdapter(handler Handler, f RuntimeAdapter) {
+    r.Lock()
+    defer r.Unlock()
+
+    _, ok := r.RuntimeAdapters[handler]
+    if !ok {
+        r.RuntimeAdapters[handler] = []RuntimeAdapter{}
+    }
+
+    r.RuntimeAdapters[handler] = append(r.RuntimeAdapters[handler], f)
 }
 
 // Changes the active prefix handler

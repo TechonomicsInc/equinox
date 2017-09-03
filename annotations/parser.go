@@ -28,6 +28,7 @@ func Parse(input string) []*Annotation {
 
     // Loop through the input creating annotations as we move
     context := CONTEXT_ROOT
+    paramBuf := ""
     var buf *Annotation
 
     for _, char := range []rune(input) {
@@ -50,7 +51,7 @@ func Parse(input string) []*Annotation {
                 // trimming the string.
                 if !unicode.IsSpace(char) {
                     // Other things are not allowed
-                    panic("Parse error at " + string(char))
+                    panic("Unexpected character '" + string(char) + "' at root level!")
                 }
             }
 
@@ -62,10 +63,15 @@ func Parse(input string) []*Annotation {
             case PARAMS_OPEN:
                 // A ( appeared thus signaling that params follow.
                 context = CONTEXT_PARAMS
+
             default:
                 // We're in Annotation context but no special chars appeared.
                 // We can assume that char is part of the annotation's name.
-                buf.Key += string(char)
+                if unicode.IsLetter(char) || unicode.IsNumber(char) {
+                    buf.Key += string(char)
+                } else {
+                    panic("Unexpected character '" + string(char) + "' in annotation name!")
+                }
             }
 
         case CONTEXT_PARAMS:
@@ -82,7 +88,31 @@ func Parse(input string) []*Annotation {
                 context = CONTEXT_STRING
 
             case NEW_ARG:
+                // A new argument begins.
+                // This token is mostly unused until other parameter types are allowed.
 
+            default:
+                // Allow spacing between args but no other chars
+                if !unicode.IsSpace(char) {
+                    panic("Unexpected character '" + string(char) + "' parameter literal!")
+                }
+            }
+
+        case CONTEXT_STRING:
+            switch char {
+            case STRING_BOUND:
+                // End of string is reached.
+                // Reset context.
+                context = CONTEXT_PARAMS
+
+                // Also write the string into the annotation-struct
+                buf.Value = append(buf.Value, paramBuf)
+                paramBuf = ""
+
+            default:
+                // Char belongs to string.
+                // Add to buffer
+                paramBuf += string(char)
             }
         }
     }

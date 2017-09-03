@@ -11,7 +11,7 @@ type Handler interface {
     Init(session *discordgo.Session)
 
     // Called to retrieve the Listener patterns
-    Listeners() []string
+    Meta() string
 
     // Called if any of the listeners matched
     Action(
@@ -20,10 +20,6 @@ type Handler interface {
         msg *discordgo.Message,
         session *discordgo.Session,
     )
-}
-
-type ListenerMeta struct {
-    Expression []string
 }
 
 // TODO: write docs about the most important thing in equinox ._.
@@ -42,6 +38,10 @@ type Router struct {
     // map of command -> handlers
     Routes map[string]Handler
 
-    // map of command -> expression
-    RouteMeta map[string]ListenerMeta
+    // Functions that help to give unknown annotations a purpose
+    AnnotationHandlers map[string][]AnnotationHandler
+
+    // Works exactly like classic adapters but is bound to a handler
+    // instead of an equinox event.
+    RuntimeAdapters map[Handler][]RuntimeAdapter
 }

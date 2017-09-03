@@ -3,7 +3,12 @@ package equinox
 import (
     "reflect"
     "github.com/bwmarrin/discordgo"
+    "code.lukas.moe/x/equinox/annotations"
 )
+
+type AnnotationHandler func(annotation *annotations.Annotation, handler Handler, router *Router)
+
+type RuntimeAdapter func(handler Handler, msg *discordgo.Message, router *Router) AdapterEvent
 
 // POGOFunc is a void func without parameters
 type POGOFunc func()

@@ -177,6 +177,14 @@ func (r *Router) execHandler(
         return
     }
 
+    if adapters, ok := r.RuntimeAdapters[handler]; ok {
+        for _, adapter := range adapters {
+            if adapter(handler, input, r).ShouldAbort() {
+                return
+            }
+        }
+    }
+
     // Call action
     handler.Action(command, content, input, caches.Session())
 }
