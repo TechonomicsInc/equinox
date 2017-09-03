@@ -87,7 +87,7 @@ func (r *Router) Handle(input *discordgo.Message) {
 
     // Check if the message contains a mention for us
     ourMention := "<@" + caches.Session().State.User.ID + ">"
-    if len(input.Mentions) > 0 {
+    if len(input.Mentions) > 0 && strings.Contains(input.Content, ourMention) {
         r.Dispatch(MENTION_FOUND, input)
 
         // If it looks like a command, search for a command.
