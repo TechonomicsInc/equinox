@@ -4,6 +4,9 @@ import (
     "unicode"
 )
 
+//go:generate stringer -type=Context
+type Context int
+
 const (
     ANNOTATION_CREATE = '@'
     PARAMS_OPEN       = '('
@@ -11,10 +14,14 @@ const (
     NEW_ARG           = ','
     STRING_BOUND      = '"'
 
-    CONTEXT_ROOT       int = iota
+    COMMENT_BOUND = '#'
+    COMMENT_END   = '\n'
+
+    CONTEXT_ROOT       Context = iota
     CONTEXT_ANNOTATION
     CONTEXT_PARAMS
     CONTEXT_STRING
+    CONTEXT_COMMENT
 )
 
 type Annotation struct {
@@ -26,16 +33,26 @@ func Parse(input string) []*Annotation {
     // Container for results
     parsed := []*Annotation{}
 
-    // Loop through the input creating annotations as we move
+    // Holds the current context
     context := CONTEXT_ROOT
+
+    // Holds the previous context when entering comments
+    commentedContext := CONTEXT_ROOT
+
+    // Buffers
     paramBuf := ""
     var buf *Annotation
 
+    // Loop through the input creating annotations as we move
     for _, char := range []rune(input) {
         switch context {
         case CONTEXT_ROOT:
             // In root context search for annotations to create
             switch char {
+            case COMMENT_BOUND:
+                commentedContext = context
+                context = CONTEXT_COMMENT
+
             case ANNOTATION_CREATE:
                 // Creating annotations involves updating buf and setting a new ctx
                 if buf != nil {
@@ -60,6 +77,10 @@ func Parse(input string) []*Annotation {
             // Not having params is ok too and results in an empty param array.
             // You can not leave out the () since ) resets the context.
             switch char {
+            case COMMENT_BOUND:
+                commentedContext = context
+                context = CONTEXT_COMMENT
+
             case PARAMS_OPEN:
                 // A ( appeared thus signaling that params follow.
                 context = CONTEXT_PARAMS
@@ -76,6 +97,10 @@ func Parse(input string) []*Annotation {
 
         case CONTEXT_PARAMS:
             switch char {
+            case COMMENT_BOUND:
+                commentedContext = context
+                context = CONTEXT_COMMENT
+
             case PARAMS_CLOSE:
                 // A ) appeared thus signaling that the params are over.
                 // Since this is the last thing an annotation contains we can reset the context
@@ -113,6 +138,12 @@ func Parse(input string) []*Annotation {
                 // Char belongs to string.
                 // Add to buffer
                 paramBuf += string(char)
+            }
+
+        case CONTEXT_COMMENT:
+            switch char {
+            case COMMENT_BOUND, COMMENT_END:
+                context = commentedContext
             }
         }
     }
