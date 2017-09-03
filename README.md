@@ -8,7 +8,7 @@ Code that makes you think "oh that's neat"
 
 ## What's all this fuzz about?
 
-Equinox is a framework that helps you keep your code lean and clean while creating chatbots with discordgo.
+Equinox is a framework that helps you to keep your code lean and clean while creating chatbots with discordgo.
 This is achieved by moving the hard stuff like caching, message parsing, event handling and friends into the background.
 All that's left are you, your modules, beautiful code and your imagination.
 
@@ -58,9 +58,12 @@ It's as simple and flexible as:
 ## Annotations
 
 Did you know that Go doesn't support annotations?<br>
-Equinox uses them anyway by shipping a little parser.
+Equinox uses them anyway by re-implementing them with a little parser.<br>
 
-Just implement a `Meta()` function on your Plugin and get the most beautiful and flexible code ever:
+Equinox annotations look a bit like Java's but only map to vararg funcs.<br>
+Arrays or Maps are not supported to keep the parser small.
+
+To use them just implement a `Meta()` function on your Plugin and get the most beautiful and flexible code you've ever seen:
 
 ```go
 type Ping struct{}
