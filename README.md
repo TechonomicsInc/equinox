@@ -31,7 +31,8 @@ func OnMessageCreate(session *discordgo.Session, message *discordgo.MessageCreat
 
 Equinox is built on, and deals with, adapters.
 Adapters are little functions that can intercept the message parsing proccess.
-This allows you to completely take over the parser stages or use the shipped stuff.
+This allows you to completely take over the parser stages or use the shipped stuff as a "drop-in core replacement".
+It's all up to you.
 
 Example to ignore messages from other bots:
 ```go
@@ -76,8 +77,7 @@ func (p *Ping) Meta() string {
         @Access("EVERYONE")
         @PrefixListeners(
             "ping",
-            "p",
-            "pong"
+            "pong",
         )
     `;
 }
@@ -90,6 +90,63 @@ Only `@Listeners`, `@PrefixListeners` and `@MentionListeners` are catched by equ
 The rest is implemented through adapters (the things you read about some lines ago).
 
 They are called `AnnotationHandler` and `RuntimeAdapter` here but essentially work the same way.
+
+The parsing stage of annotation-processing is also highly customizable.
+Once the parser encounters an unknown annotation it checks wether someone registered a handler for that.
+If a handler is found, the function gets called with the matching paramters and *can* (but isn't required to) register event handlers that fire once this plugin handles a message. This is especially useful for modifying logic like `@Access(OWNER)` or `@RequiredLevel(12)` or something else.
+
+## Automated Listeners w. Parameter Expansion
+
+Ever needed plugins that work with `!name` and `@bot name`?<br>
+Equinox has multiple ways to solve that!
+
+Either create an annotation for each type:
+```go
+@PrefixListeners("name")
+@MentionListeners("name")
+```
+
+Or create two generic listeners:
+```go
+@Listeners("{p}name", "{@}name")
+```
+
+Or use parameter expansion:
+```go
+@Listeners("{p,@}name")
+```
+
+The thing in `{}` is called "equinox expression" and supports more than just `@` and `p`.<br>
+A documentation on that will follow later.<br>
+Also, as you see, expressions support bash-like expansion with commas.
+
+## The Last Resort
+
+While Adapters and Annotations are extremely powerful and flexible tools that can solve *almost* all problems you'll ever face while writing a bot, there's one case where they can't help you: Cleverbot.
+
+Or to be precise:<br>
+"Doing stuff when the message looks like an `@mention` command but isn't".
+
+This makes the last resort (which is technically nothing more than a fancy adapter) perfect to implement bot-apis like cleverbot that reply with messages when tagged instead of "no command".
+
+Implementation Example:
+```go
+router.RegisterAdapter(equinox.LAST_RESORT_PRE_EXECUTE, func(msg *discordgo.Message) equinox.AdapterEvent {
+    // Resolve names in received message
+    m := msg.ContentWithMentionsReplaced()
+    
+    // Get a reply from your bot-api
+    response := SendMessageToYourBotApi(m)
+    
+    // Send it back to discord
+    caches.Session().ChannelMessageSend(
+        msg.ChannelID,
+        response,
+    )
+
+    return equinox.CONTINUE_EXECUTION
+})
+```
 
 ## Docs
 
