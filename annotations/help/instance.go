@@ -1,6 +1,10 @@
 package help
 
-import "code.lukas.moe/x/equinox"
+import (
+    "code.lukas.moe/x/equinox"
+    "code.lukas.moe/x/equinox/annotations"
+    "regexp"
+)
 
 type HelpMapping = map[equinox.Handler]*Help
 
@@ -13,8 +17,9 @@ type Help struct {
 }
 
 var (
-    helpMapping = HelpMapping{}
-    router      *equinox.Router
+    router       *equinox.Router
+    helpMapping  = HelpMapping{}
+    spaceTrimmer = regexp.MustCompile(`\n(\ +)`)
 )
 
 func GetOverview() map[string][]string {
@@ -22,7 +27,16 @@ func GetOverview() map[string][]string {
     tmp := map[string][]string{}
 
     for route, handler := range router.Routes {
-        mapping := helpMapping[handler]
+        mapping, ok := helpMapping[handler]
+        if !ok {
+            continue
+        }
+
+        // Lazy initialization
+        if _, ok := tmp[mapping.Category]; !ok {
+            tmp[mapping.Category] = []string{}
+        }
+
         tmp[mapping.Category] = append(tmp[mapping.Category], route)
     }
 
@@ -32,5 +46,13 @@ func GetOverview() map[string][]string {
 func CreateMappingIfNeeded(handler equinox.Handler) {
     if _, ok := helpMapping[handler]; !ok {
         helpMapping[handler] = &Help{}
+    }
+}
+
+func SanitizeHelpAnnotation(annotation *annotations.Annotation) {
+    annotation.Key = spaceTrimmer.ReplaceAllString(annotation.Key, "\n")
+
+    for i := range annotation.Value {
+        annotation.Value[i] = spaceTrimmer.ReplaceAllString(annotation.Value[i], "\n")
     }
 }

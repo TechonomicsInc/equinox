@@ -6,6 +6,7 @@ import (
 
 func InjectInto(r *equinox.Router) {
     r.RegisterAnnotationHandler("Name", Name)
+    r.RegisterAnnotationHandler("Category", Category)
 
     r.RegisterAnnotationHandler("Description", Description)
     r.RegisterAnnotationHandler("Descr", Descr)
@@ -18,8 +19,10 @@ func InjectInto(r *equinox.Router) {
 }
 
 func GetForRoute(route string) *Help {
-    if l, ok := router.Routes[route]; ok {
-        return GetForHandler(l)
+    for _, kind := range []string{"", "{p}", "{@}"} {
+        if l, ok := router.Routes[kind+route]; ok {
+            return GetForHandler(l)
+        }
     }
 
     return nil
