@@ -4,6 +4,7 @@ import (
     "code.lukas.moe/x/equinox"
     "code.lukas.moe/x/equinox/annotations"
     "regexp"
+    "strings"
 )
 
 type HelpMapping = map[equinox.Handler]*Help
@@ -20,6 +21,12 @@ var (
     router       *equinox.Router
     helpMapping  = HelpMapping{}
     spaceTrimmer = regexp.MustCompile(`\n(\ +)`)
+
+    abbreviations = map[string]string{
+        "[^]":     "`",
+        "[code]":  "`",
+        "[/code]": "`",
+    }
 )
 
 func GetOverview() map[string][]string {
@@ -44,5 +51,9 @@ func SanitizeHelpAnnotation(annotation *annotations.Annotation) {
 
     for i := range annotation.Value {
         annotation.Value[i] = spaceTrimmer.ReplaceAllString(annotation.Value[i], "\n")
+
+        for b, a := range abbreviations {
+            annotation.Value[i] = strings.Replace(annotation.Value[i], b, a, -1)
+        }
     }
 }
