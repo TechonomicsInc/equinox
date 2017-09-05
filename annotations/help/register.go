@@ -5,16 +5,26 @@ import (
     "strings"
 )
 
+var annotationMap = map[string]equinox.AnnotationHandler{
+    "Incubating":  Incubating,
+    "Warning":     Warning,
+    "Warn":        Warning,
+    "Note":        Note,
+    "Hint":        Note,
+    "Name":        Name,
+    "Category":    Category,
+    "Description": Description,
+    "Descr":       Description,
+    "Summary":     Description,
+    "Usage":       Usage,
+    "Example":     Example,
+    "Aliases":     Aliases,
+}
+
 func InjectInto(r *equinox.Router) {
-    r.RegisterAnnotationHandler("Name", Name)
-    r.RegisterAnnotationHandler("Category", Category)
-
-    r.RegisterAnnotationHandler("Description", Description)
-    r.RegisterAnnotationHandler("Descr", Descr)
-    r.RegisterAnnotationHandler("Summary", Summary)
-
-    r.RegisterAnnotationHandler("Usage", Usage)
-    r.RegisterAnnotationHandler("Example", Example)
+    for k, v := range annotationMap {
+        r.RegisterAnnotationHandler(k, v)
+    }
 
     router = r
 }

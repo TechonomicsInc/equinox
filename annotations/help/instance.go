@@ -15,6 +15,12 @@ type Help struct {
     Description string
     Usage       string
     Example     string
+
+    Aliases []string
+
+    Incubating bool
+    Warning    string
+    Note       string
 }
 
 var (
