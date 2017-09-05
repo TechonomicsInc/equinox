@@ -2,6 +2,7 @@ package help
 
 import (
     "code.lukas.moe/x/equinox"
+    "strings"
 )
 
 func InjectInto(r *equinox.Router) {
@@ -31,6 +32,18 @@ func GetForRoute(route string) *Help {
 func GetForHandler(handler equinox.Handler) *Help {
     if help, ok := helpMapping[handler]; ok {
         return help
+    }
+
+    return nil
+}
+
+func GetForName(name string) *Help {
+    name = strings.ToLower(name)
+
+    for _, help := range helpMapping {
+        if strings.ToLower(help.Name) == name {
+            return help
+        }
     }
 
     return nil

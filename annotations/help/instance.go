@@ -23,21 +23,11 @@ var (
 )
 
 func GetOverview() map[string][]string {
-    // Category -> []CommandName
+    // Category -> []PluginName
     tmp := map[string][]string{}
 
-    for route, handler := range router.Routes {
-        mapping, ok := helpMapping[handler]
-        if !ok {
-            continue
-        }
-
-        // Lazy initialization
-        if _, ok := tmp[mapping.Category]; !ok {
-            tmp[mapping.Category] = []string{}
-        }
-
-        tmp[mapping.Category] = append(tmp[mapping.Category], route)
+    for _, mapping := range helpMapping {
+        tmp[mapping.Category] = append(tmp[mapping.Category], mapping.Name)
     }
 
     return tmp
