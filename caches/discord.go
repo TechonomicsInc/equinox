@@ -5,16 +5,16 @@ import (
 )
 
 func GetChannel(id string) (*discordgo.Channel, error) {
-    id = "discord::channel::" + id
+    cid := "discord::channel::" + id
 
-    ch := Get(id)
+    ch := Get(cid)
     if ch != nil {
         return ch.(*discordgo.Channel), nil
     }
 
     ch, err := Session().Channel(id)
     if err == nil {
-        Set(id, NewItem(ch))
+        Set(cid, NewItem(ch))
         return ch.(*discordgo.Channel), nil
     }
 
@@ -22,16 +22,16 @@ func GetChannel(id string) (*discordgo.Channel, error) {
 }
 
 func GetGuild(id string) (*discordgo.Guild, error) {
-    id = "discord::guild::" + id
+    cid := "discord::guild::" + id
 
-    ch := Get(id)
+    ch := Get(cid)
     if ch != nil {
         return ch.(*discordgo.Guild), nil
     }
 
     ch, err := Session().Guild(id)
     if err == nil {
-        Set(id, NewItem(ch))
+        Set(cid, NewItem(ch))
         return ch.(*discordgo.Guild), nil
     }
 
@@ -39,16 +39,16 @@ func GetGuild(id string) (*discordgo.Guild, error) {
 }
 
 func GetUser(id string) (*discordgo.User, error) {
-    id = "discord::user::" + id
+    cid := "discord::user::" + id
 
-    ch := Get(id)
+    ch := Get(cid)
     if ch != nil {
         return ch.(*discordgo.User), nil
     }
 
     ch, err := Session().User(id)
     if err == nil {
-        Set(id, NewItem(ch))
+        Set(cid, NewItem(ch))
         return ch.(*discordgo.User), nil
     }
 
