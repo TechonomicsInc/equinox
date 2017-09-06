@@ -45,6 +45,10 @@ func (r *Router) AddRoute(handler Handler) {
 
     meta := annotations.Parse(handler.Meta())
     for _, annotation := range meta {
+        OnDebug(func() {
+            logf("--- [ANNOTATION] [%s] -> %v", annotation.Key, annotation.Value)
+        })
+
         switch annotation.Key {
         case "PrefixListeners":
             for _, listener := range annotation.Value {
@@ -95,7 +99,7 @@ func (r *Router) AddRoute(handler Handler) {
 
 func (r *Router) addListener(listener string, handler Handler) {
     OnDebug(func() {
-        logf("--- Found listener: %s", listener)
+        logf("------ Found listener: %s", listener)
     })
 
     if _, ok := r.Routes[listener]; !ok {

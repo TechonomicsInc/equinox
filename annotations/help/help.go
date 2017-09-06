@@ -53,8 +53,8 @@ func Note(annotation *annotations.Annotation, handler equinox.Handler, router *e
     helpMapping[handler].Note = annotation.Value[0]
 }
 
-func Aliases(annotation *annotations.Annotation, handler equinox.Handler, router *equinox.Router) {
+func ShowAliases(annotation *annotations.Annotation, handler equinox.Handler, router *equinox.Router) {
     CreateMappingIfNeeded(handler)
     SanitizeHelpAnnotation(annotation)
-    helpMapping[handler].Aliases = annotation.Value
+    helpMapping[handler].ShowAliases = true
 }

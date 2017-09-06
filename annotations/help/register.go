@@ -18,7 +18,20 @@ var annotationMap = map[string]equinox.AnnotationHandler{
     "Summary":     Description,
     "Usage":       Usage,
     "Example":     Example,
-    "Aliases":     Aliases,
+    "Aliases":     ShowAliases,
+    "ShowAliases": ShowAliases,
+}
+
+func GetListenersForHandler(handler equinox.Handler) []string {
+    buf := []string{}
+
+    for listener, h := range router.Routes {
+        if h == handler {
+            buf = append(buf, listener)
+        }
+    }
+
+    return buf
 }
 
 func InjectInto(r *equinox.Router) {

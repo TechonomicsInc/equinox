@@ -10,17 +10,19 @@ import (
 type HelpMapping = map[equinox.Handler]*Help
 
 type Help struct {
-    Name        string
+    HRef equinox.Handler
+
+    Name string
+
     Category    string
     Description string
     Usage       string
     Example     string
 
-    Aliases []string
-
-    Incubating bool
-    Warning    string
-    Note       string
+    ShowAliases bool
+    Incubating  bool
+    Warning     string
+    Note        string
 }
 
 var (
@@ -48,7 +50,7 @@ func GetOverview() map[string][]string {
 
 func CreateMappingIfNeeded(handler equinox.Handler) {
     if _, ok := helpMapping[handler]; !ok {
-        helpMapping[handler] = &Help{}
+        helpMapping[handler] = &Help{HRef: handler}
     }
 }
 

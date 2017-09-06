@@ -5,6 +5,8 @@ import (
 )
 
 func GetChannel(id string) (*discordgo.Channel, error) {
+    id = "discord::channel::" + id
+
     ch := Get(id)
     if ch != nil {
         return ch.(*discordgo.Channel), nil
@@ -20,6 +22,8 @@ func GetChannel(id string) (*discordgo.Channel, error) {
 }
 
 func GetGuild(id string) (*discordgo.Guild, error) {
+    id = "discord::guild::" + id
+
     ch := Get(id)
     if ch != nil {
         return ch.(*discordgo.Guild), nil
@@ -35,6 +39,8 @@ func GetGuild(id string) (*discordgo.Guild, error) {
 }
 
 func GetUser(id string) (*discordgo.User, error) {
+    id = "discord::user::" + id
+
     ch := Get(id)
     if ch != nil {
         return ch.(*discordgo.User), nil
