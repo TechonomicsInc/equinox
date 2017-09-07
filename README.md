@@ -2,11 +2,9 @@
 > #### DO NOT USE IT IN YOUR PROJECTS UNTIL THIS WARNING IS REMOVED.
 > #### THINGS **WILL** CHANGE RAPIDLY, FREQUENT AND WITHOUT ANNOUNCEMENTS.
 
+<img align="right" width="384" src="https://golang.org/doc/gopher/pencil/gopherswrench.jpg">
+
 # Equinox
-
-Code that makes you think "oh that's neat"
-
-## What's all this fuzz about?
 
 Equinox is a framework that helps you to keep your code lean and clean while creating chatbots with discordgo.
 This is achieved by moving the hard stuff like caching, message parsing, event handling and friends into the background.
