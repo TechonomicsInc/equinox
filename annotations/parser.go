@@ -44,7 +44,7 @@ func Parse(input string) []*Annotation {
     var buf *Annotation
 
     // Loop through the input creating annotations as we move
-    for _, char := range []rune(input) {
+    for pos, char := range []rune(input) {
         switch context {
         case CONTEXT_ROOT:
             // In root context search for annotations to create
@@ -68,7 +68,7 @@ func Parse(input string) []*Annotation {
                 // trimming the string.
                 if !unicode.IsSpace(char) {
                     // Other things are not allowed
-                    panic("Unexpected character '" + string(char) + "' at root level!")
+                    printParseError(input, pos, context, "Unexpected character at root level!")
                 }
             }
 
@@ -91,7 +91,7 @@ func Parse(input string) []*Annotation {
                 if unicode.IsLetter(char) || unicode.IsNumber(char) {
                     buf.Key += string(char)
                 } else {
-                    panic("Unexpected character '" + string(char) + "' in annotation name!")
+                    printParseError(input, pos, context, "Unexpected character in annotation name!")
                 }
             }
 
@@ -119,7 +119,7 @@ func Parse(input string) []*Annotation {
             default:
                 // Allow spacing between args but no other chars
                 if !unicode.IsSpace(char) {
-                    panic("Unexpected character '" + string(char) + "' parameter literal!")
+                    printParseError(input, pos, context, "Unexpected character in parameter literal!")
                 }
             }
 
@@ -155,4 +155,34 @@ func Parse(input string) []*Annotation {
 
     // Profit!
     return parsed
+}
+
+func printParseError(input string, pos int, ctx Context, emsg string) {
+    cinput := []rune(input)
+
+    pre := cinput[:pos]
+    post := cinput[pos+1:]
+
+    err := "\n [=================================================]\n"
+
+    err += string(pre)
+    err += " ~~> " + string(cinput[pos]) + " <~~ "
+    err += string(post)
+
+    err += "\n [=================================================]\n"
+
+    err += " Equinox encountered an annotation that it could not understand.\n"
+    err += " The error is marked as ~~> E <~~ in the code above.\n"
+    err += "\n"
+
+    err += " Context: " + ctx.String() + "\n"
+    err += " Error: " + emsg + "\n"
+    err += "\n"
+    err += " Try to check if the context makes sense in the code above.\n"
+    err += " For example: Seeing a " + CONTEXT_PARAMS.String() + " in a string indicates unclosed string literals.\n"
+    err += " Happy hacking!"
+
+    err += "\n [=================================================]\n"
+
+    panic(err)
 }
