@@ -7,21 +7,28 @@ import (
 //go:generate stringer -type=Context
 type Context int
 
+type Compound = [2]rune
+
 const (
+    CONTEXT_ROOT       Context = iota
+    CONTEXT_ANNOTATION
+    CONTEXT_PARAMS
+    CONTEXT_STRING
+
+    CONTEXT_COMMENT_BLOCK
+    CONTEXT_COMMENT_LINE
+)
+
+var (
     ANNOTATION_CREATE = '@'
     PARAMS_OPEN       = '('
     PARAMS_CLOSE      = ')'
     NEW_ARG           = ','
     STRING_BOUND      = '"'
 
-    COMMENT_BOUND = '#'
-    COMMENT_END   = '\n'
-
-    CONTEXT_ROOT       Context = iota
-    CONTEXT_ANNOTATION
-    CONTEXT_PARAMS
-    CONTEXT_STRING
-    CONTEXT_COMMENT
+    COMMENT_LINE        = Compound{'/', '/'}
+    COMMENT_BLOCK_START = Compound{'/', '*'}
+    COMMENT_BLOCK_END   = Compound{'*', '/'}
 )
 
 type Annotation struct {
@@ -43,15 +50,34 @@ func Parse(input string) []*Annotation {
     paramBuf := ""
     var buf *Annotation
 
+    // Skipper
+    // Used to skip n chars from within the loop
+    skipper := 0
+
     // Loop through the input creating annotations as we move
-    for pos, char := range []rune(input) {
+    cinput := []rune(input)
+    for pos, char := range cinput {
+        if skipper > 0 {
+            skipper--
+            continue
+        }
+
         switch context {
         case CONTEXT_ROOT:
             // In root context search for annotations to create
             switch char {
-            case COMMENT_BOUND:
-                commentedContext = context
-                context = CONTEXT_COMMENT
+            case COMMENT_LINE[0], COMMENT_BLOCK_START[0]:
+                if cinput[pos+1] == COMMENT_LINE[1] {
+                    commentedContext = context
+                    context = CONTEXT_COMMENT_LINE
+                    skipper += 1
+                }
+
+                if cinput[pos+1] == COMMENT_BLOCK_START[1] {
+                    commentedContext = context
+                    context = CONTEXT_COMMENT_BLOCK
+                    skipper += 1
+                }
 
             case ANNOTATION_CREATE:
                 // Creating annotations involves updating buf and setting a new ctx
@@ -77,9 +103,18 @@ func Parse(input string) []*Annotation {
             // Not having params is ok too and results in an empty param array.
             // You can not leave out the () since ) resets the context.
             switch char {
-            case COMMENT_BOUND:
-                commentedContext = context
-                context = CONTEXT_COMMENT
+            case COMMENT_LINE[0], COMMENT_BLOCK_START[0]:
+                if cinput[pos+1] == COMMENT_LINE[1] {
+                    commentedContext = context
+                    context = CONTEXT_COMMENT_LINE
+                    skipper += 1
+                }
+
+                if cinput[pos+1] == COMMENT_BLOCK_START[1] {
+                    commentedContext = context
+                    context = CONTEXT_COMMENT_BLOCK
+                    skipper += 1
+                }
 
             case PARAMS_OPEN:
                 // A ( appeared thus signaling that params follow.
@@ -97,9 +132,18 @@ func Parse(input string) []*Annotation {
 
         case CONTEXT_PARAMS:
             switch char {
-            case COMMENT_BOUND:
-                commentedContext = context
-                context = CONTEXT_COMMENT
+            case COMMENT_LINE[0], COMMENT_BLOCK_START[0]:
+                if cinput[pos+1] == COMMENT_LINE[1] {
+                    commentedContext = context
+                    context = CONTEXT_COMMENT_LINE
+                    skipper += 1
+                }
+
+                if cinput[pos+1] == COMMENT_BLOCK_START[1] {
+                    commentedContext = context
+                    context = CONTEXT_COMMENT_BLOCK
+                    skipper += 1
+                }
 
             case PARAMS_CLOSE:
                 // A ) appeared thus signaling that the params are over.
@@ -140,9 +184,14 @@ func Parse(input string) []*Annotation {
                 paramBuf += string(char)
             }
 
-        case CONTEXT_COMMENT:
-            switch char {
-            case COMMENT_BOUND, COMMENT_END:
+        case CONTEXT_COMMENT_BLOCK:
+            if char == COMMENT_BLOCK_END[0] && cinput[pos+1] == COMMENT_BLOCK_END[1] {
+                context = commentedContext
+                skipper += 1
+            }
+
+        case CONTEXT_COMMENT_LINE:
+            if char == '\n' {
                 context = commentedContext
             }
         }
