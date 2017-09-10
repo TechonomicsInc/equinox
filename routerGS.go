@@ -20,6 +20,7 @@ func NewRouter() *Router {
     r.Unlock()
 
     r.UseDebugMode(false)
+    r.IgnoreCommandCase(false)
     r.SetPanicHandler(DefaultPanicHandler)
     r.SetParseErrorHandler(DefaultParseErrorHandler)
     r.SetLastResort(NOOPW1)
@@ -180,4 +181,8 @@ func (r *Router) SetLastResort(f POGOFuncW1) {
     defer r.Unlock()
 
     r.lastResort = f
+}
+
+func (r *Router) IgnoreCommandCase(v bool) {
+    r.ignoreCommandCase = v
 }

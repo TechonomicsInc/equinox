@@ -26,7 +26,8 @@ type Handler interface {
 type Router struct {
     sync.RWMutex
 
-    debugMode bool
+    debugMode         bool
+    ignoreCommandCase bool
 
     lastResort        POGOFuncW1
     prefixHandler     PrefixHandler

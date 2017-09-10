@@ -95,8 +95,13 @@ func (r *Router) Handle(input *discordgo.Message) {
         if strings.HasPrefix(input.Content, ourMention) {
             // Dissect the message
             parts := strings.Fields(input.Content)
-            cmd := parts[1]
             content := strings.Join(parts[2:], " ")
+            cmd := parts[1]
+
+            // Ignore case of command
+            if r.ignoreCommandCase {
+                cmd = strings.ToLower(cmd)
+            }
 
             // Check if a handler for this is present
             handler, ok := r.Routes["{@}"+cmd]
@@ -119,8 +124,9 @@ func (r *Router) Handle(input *discordgo.Message) {
         // We have been mentioned but the message was neither a command
         // nor a pre-mention that would've triggered the last resort.
         // Dispatch an event just in case somebody needs that.
-        r.Dispatch(MENTION_UNMAPPED, input)
-        return
+        if r.Dispatch(MENTION_UNMAPPED, input).ShouldAbort() {
+            return
+        }
     }
 
     // Check if the message if prefixed for us
@@ -138,6 +144,11 @@ func (r *Router) Handle(input *discordgo.Message) {
     parts := strings.Fields(input.Content)
     cmd := strings.Replace(parts[0], prefix, "", 1)
     content := strings.Join(parts[1:], " ")
+
+    // Ignore case of command
+    if r.ignoreCommandCase {
+        cmd = strings.ToLower(cmd)
+    }
 
     OnDebug(func() {
         logf("[HANDLE  ][%s][COMMAND] '%s'", input.ID, cmd)
