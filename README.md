@@ -96,7 +96,7 @@ What?<br>
 Self-written parsers are bad at detecting errors?<br>
 Let me prove you wrong:
 
-![](https://cdn.lks.li/43GvaZwXn3.png)
+![](https://cdn.lks.li/HsDk221YOH.png)
 
 Equinox always shows you an annotated snippet of your code to make spotting the error simpler.<br>
 Context-aware errors that provide more helpful tips on solving your problem are currently WiP.
