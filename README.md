@@ -89,9 +89,17 @@ The rest is implemented through adapters (the things you read about some lines a
 
 They are called `AnnotationHandler` and `RuntimeAdapter` here but essentially work the same way.
 
-The parsing stage of annotation-processing is also highly customizable.
 Once the parser encounters an unknown annotation it checks wether someone registered a handler for that.
 If a handler is found, the function gets called with the matching paramters and *can* (but isn't required to) register event handlers that fire once this plugin handles a message. This is especially useful for modifying logic like `@Access(OWNER)` or `@RequiredLevel(12)` or something else.
+
+What?<br>
+Self-written parsers are bad at detecting errors?<br>
+Let me prove you wrong:
+
+![](https://cdn.lks.li/HsDk221YOH.png)
+
+Equinox always shows you an annotated snippet of your code to make spotting the error simpler.<br>
+Context-aware errors that provide more helpful tips on solving your problem are currently WiP.
 
 ## Automated Listeners w. Parameter Expansion
 
@@ -145,6 +153,39 @@ router.RegisterAdapter(equinox.LAST_RESORT_PRE_EXECUTE, func(msg *discordgo.Mess
     return equinox.CONTINUE_EXECUTION
 })
 ```
+
+## Managed Object Cache
+
+Need to store some object in a central place for some time?<br>
+Equinox ships with an uncomplicated, managed, thread-safe and optionally expiring cache.
+
+See it in action below:
+
+First start the manager somewhere:
+```go
+go caches.Manage()
+```
+
+Then store something:
+```go
+// Make some meaningful item
+type Animal stuct{/* ... */}
+sheep := new(Animal)
+
+// Store it.
+// Auto-delete it after 15 minutes if nobody tries to access it.
+caches.Set(
+    "sheep",
+    caches.NewItem(sheep).SetTimeout(int64(15 * time.Minute)),
+)
+```
+
+Then access it somewhere else:
+```go
+caches.Get("sheep").(*Animal)
+```
+
+Only works all the time.
 
 ## Docs
 
