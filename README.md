@@ -12,6 +12,22 @@ All that's left are you, your modules, beautiful code and your imagination.
 
 ## Awesome Features:
 
+## Speed
+
+While the message parser component is not yet *zero-allocation* we are currently here:
+
+- ~650ns/op
+- ~96B/op
+- ~6 allocs/op
+
+Which sums up to parsing ~1.5 million messages per second with only one core of an i7-4790k.
+
+The only thing in equinox that might slow down your bot are overused adapters.<br>
+However: Since those penalties are self-imposed (by poor library usage) there's no way to fix that.
+
+For example: Shiro's core adapters bump the average message parsing to 0.05ms (50,000ns).<br>
+While this is still pretty fast it shows that **you should keep in mind that Adapters run in your bot's hottest execution path** and thus limit them to the most needed actions if you're planning to go big.
+
 ## Simplicity
 
 Hate your million-lines long code base that handles the `MESSAGE_CREATE` event?
