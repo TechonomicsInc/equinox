@@ -149,7 +149,7 @@ While Adapters and Annotations are extremely powerful and flexible tools that ca
 Or to be precise:<br>
 "Doing stuff when the message looks like an `@mention` command but isn't".
 
-This makes the last resort (which is technically nothing more than a fancy adapter) perfect to implement bot-apis like cleverbot that reply with messages when tagged instead of "no command".
+This makes the last resort (which is technically nothing more than an adapter) perfect to implement bot-apis like cleverbot that reply with messages when tagged instead of "no command".
 
 Implementation Example:
 ```go
