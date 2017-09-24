@@ -17,16 +17,21 @@
 package equinox
 
 import (
-    "strings"
     "github.com/bwmarrin/discordgo"
+    "strings"
 )
 
-// PrefixHandler is used to check if  any prefix is available (eg for server based prefixes.
+// PrefixHandler is used to get the current prefix.
 // If a prefix is found the function should return the string.
 // If not an empty string is expected
 type PrefixHandler func(msg *discordgo.Message) string
 
+// PrefixAdapter is a special adapter that is expected to call the PrefixHandler.
+// It should then use the received information to determine whether *msg contains the prefix or not.
+type PrefixAdapter func(r *Router, msg *discordgo.Message) AdapterEvent
+
 // NewStaticPrefix constructs a PrefixHandler that always returns $prefix.
+// Useful for simple or small bots.
 func NewStaticPrefix(prefix string) PrefixHandler {
     return func(msg *discordgo.Message) string {
         return prefix
@@ -37,7 +42,7 @@ func NewStaticPrefix(prefix string) PrefixHandler {
 func DefaultPrefixAdapter(r *Router, msg *discordgo.Message) AdapterEvent {
     p := r.prefixHandler(msg)
 
-    if p == "" {
+    if p == "" || (len(msg.Content) < len(p)+1) {
         return STOP_EXECUTION
     }
 

@@ -145,23 +145,22 @@ func (r *Router) Handle(input *discordgo.Message) {
         }
     }
 
-    // Check if the message if prefixed for us
-    // First get the prefix
-    prefix := r.prefixHandler(input)
-    if prefix == "" {
-        return
-    }
-
     // Do some message analyzing checks
     // For example: Check if the message contains the prefix
     r.Dispatch(MESSAGE_ANALYZE, input).Act()
 
     // Dissect the message
+    cmd := ""
+    content := ""
     parts := strings.Fields(input.Content)
-    cmd := strings.Replace(parts[0], prefix, "", 1)
-    content := strings.Join(parts[1:], " ")
+    prefix := r.prefixHandler(input)
 
-    // Ignore case of command
+    if prefix != "" {
+        cmd = strings.Replace(parts[0], prefix, "", 1)
+        content = strings.Join(parts[1:], " ")
+    }
+
+    // Ignore case of command if needed
     if r.ignoreCommandCase {
         cmd = strings.ToLower(cmd)
     }

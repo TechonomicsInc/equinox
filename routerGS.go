@@ -22,6 +22,7 @@ import (
     "code.lukas.moe/x/equinox/caches"
     "regexp"
     "code.lukas.moe/x/equinox/annotations"
+    "github.com/bwmarrin/discordgo"
 )
 
 // NewRouter constructs a router object with some default adapters
@@ -40,6 +41,15 @@ func NewRouter() *Router {
     r.SetPanicHandler(DefaultPanicHandler)
     r.SetParseErrorHandler(DefaultParseErrorHandler)
     r.SetLastResort(NOOPW1)
+
+    // Prepare prefix handling by setting a default prefix
+    // and registering a parsing adapter.
+    // All of this can be swapped by the user at runtime.
+    r.SetPrefixHandler(NewStaticPrefix("!"))
+    r.SetPrefixAdapter(DefaultPrefixAdapter)
+    r.RegisterAdapter(MESSAGE_ANALYZE, func(msg *discordgo.Message) AdapterEvent {
+        return r.prefixAdapter(r, msg)
+    })
 
     return r
 }
@@ -143,6 +153,7 @@ func (r *Router) RegisterAdapter(e Event, f AdapterFunc) {
     r.EventHandlers[e] = append(r.EventHandlers[e], f)
 }
 
+// Registers a handler F for a given annotation name
 func (r *Router) RegisterAnnotationHandler(annotation string, f AnnotationHandler) {
     r.Lock()
     defer r.Unlock()
@@ -175,6 +186,14 @@ func (r *Router) SetPrefixHandler(h PrefixHandler) {
     r.prefixHandler = h
 }
 
+// Changes the active prefix adapter
+func (r *Router) SetPrefixAdapter(a PrefixAdapter) {
+    r.Lock()
+    defer r.Unlock()
+
+    r.prefixAdapter = a
+}
+
 // Changes the active panic handler
 func (r *Router) SetPanicHandler(h PanicHandler) {
     r.Lock()
@@ -199,6 +218,7 @@ func (r *Router) SetLastResort(f POGOFuncW1) {
     r.lastResort = f
 }
 
+// Change the case-respect of equinox
 func (r *Router) IgnoreCommandCase(v bool) {
     r.ignoreCommandCase = v
 }

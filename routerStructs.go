@@ -46,9 +46,11 @@ type Router struct {
     ignoreCommandCase bool
 
     lastResort        POGOFuncW1
-    prefixHandler     PrefixHandler
     panicHandler      PanicHandler
     parseErrorHandler ParseErrorHandler
+
+    prefixHandler PrefixHandler
+    prefixAdapter PrefixAdapter
 
     EventHandlers map[Event][]AdapterFunc
 
