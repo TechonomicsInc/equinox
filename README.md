@@ -108,15 +108,6 @@ They are called `AnnotationHandler` and `RuntimeAdapter` here but essentially wo
 Once the parser encounters an unknown annotation it checks wether someone registered a handler for that.
 If a handler is found, the function gets called with the matching paramters and *can* (but isn't required to) register event handlers that fire once this plugin handles a message. This is especially useful for modifying logic like `@Access(OWNER)` or `@RequiredLevel(12)` or something else.
 
-What?<br>
-Self-written parsers are bad at detecting errors?<br>
-Let me prove you wrong:
-
-![](https://cdn.lks.li/bFtXRXl6Ls.png)
-
-Equinox always shows you an annotated snippet of your code to make spotting the error simpler.<br>
-Context-aware errors that provide more helpful tips on solving your problem are currently WiP.
-
 ## Automated Listeners w. Parameter Expansion
 
 Ever needed plugins that work with `!name` and `@bot name`?<br>
