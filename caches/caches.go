@@ -19,7 +19,7 @@ package caches
 import (
     "sync"
     "time"
-    "github.com/bwmarrin/discordgo"
+    "code.lukas.moe/x/discordgo"
 )
 
 var (

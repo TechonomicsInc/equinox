@@ -18,7 +18,7 @@ package equinox
 
 import (
     "sync"
-    "github.com/bwmarrin/discordgo"
+    "code.lukas.moe/x/discordgo"
 )
 
 // Handler defines the basic layout of Handler structs

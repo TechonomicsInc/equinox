@@ -18,7 +18,7 @@ package equinox
 
 import (
     "reflect"
-    "github.com/bwmarrin/discordgo"
+    "code.lukas.moe/x/discordgo"
     "code.lukas.moe/x/equinox/annotations"
 )
 

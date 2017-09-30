@@ -18,7 +18,7 @@ package equinox
 
 import (
     "fmt"
-    "github.com/bwmarrin/discordgo"
+    "code.lukas.moe/x/discordgo"
 )
 
 // AdapterFunc defines a function that takes N interfaces and returns an AdapterEvent

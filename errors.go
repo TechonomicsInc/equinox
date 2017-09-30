@@ -18,7 +18,7 @@ package equinox
 
 import (
     "fmt"
-    "github.com/bwmarrin/discordgo"
+    "code.lukas.moe/x/discordgo"
 )
 
 // ParseErrorHandler defines the signature of a func that may catch parser errors

@@ -22,7 +22,7 @@ import (
     "strings"
     "time"
     "code.lukas.moe/x/equinox/caches"
-    "github.com/bwmarrin/discordgo"
+    "code.lukas.moe/x/discordgo"
 )
 
 // Sends an event to all registered listeners.

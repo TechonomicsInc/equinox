@@ -17,7 +17,7 @@
 package adapters
 
 import (
-    "github.com/bwmarrin/discordgo"
+    "code.lukas.moe/x/discordgo"
     "code.lukas.moe/x/equinox"
     "code.lukas.moe/x/equinox/caches"
 )

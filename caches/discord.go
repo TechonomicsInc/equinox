@@ -17,7 +17,7 @@
 package caches
 
 import (
-    "github.com/bwmarrin/discordgo"
+    "code.lukas.moe/x/discordgo"
 )
 
 func GetChannel(id string) (*discordgo.Channel, error) {

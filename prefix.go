@@ -17,7 +17,7 @@
 package equinox
 
 import (
-    "github.com/bwmarrin/discordgo"
+    "code.lukas.moe/x/discordgo"
     "strings"
 )
 

@@ -22,7 +22,7 @@ import (
     "code.lukas.moe/x/equinox/caches"
     "regexp"
     "code.lukas.moe/x/equinox/annotations"
-    "github.com/bwmarrin/discordgo"
+    "code.lukas.moe/x/discordgo"
 )
 
 // NewRouter constructs a router object with some default adapters
