@@ -10,8 +10,6 @@ Equinox is a framework that helps you to keep your code lean and clean while cre
 This is achieved by moving the hard stuff like caching, message parsing, event handling and friends into the background.
 All that's left are you, your modules, beautiful code and your imagination.
 
-## Awesome Features:
-
 ## Zero Dependencies
 
 Equinox only uses stdlib imports. Always.<br>
