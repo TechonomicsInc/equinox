@@ -12,25 +12,44 @@ All that's left are you, your modules, beautiful code and your imagination.
 
 ## Awesome Features:
 
+## Zero Dependencies
+
+Equinox only uses stdlib imports. Always.<br>
+The only import that breaks this rule is `discordgo` because of the required `Message` struct.
+
+To tame this transitive dependency just define your version of dgo as `[[override]]` instead of `[[constraint]]`.
+This ensures that `golang/dep` injects your desired version into equinox.
+
+The project used to be "service agnostic" but this involved a lot of `interface{}` boxing.
+This insane amount of heap-escaping pointers slowed equinox extremely.
+Since I'm trying to build a "next level framework", I decided to trade off the generics for performance.
+I might bring them back when my code generation skills have improved or when go supports actual generics.
+Whatever happens first.
+Until then you either have to stick to discord or manipulate equinox with `go/parser`, `go/ast` and friends.
+
 ## Speed
 
-While the message parser component is not yet *zero-allocation* we are currently here:
+The goal is to have a zero-allocation parser by 2018.<br>
+This is not an easy transition so bear with me.
+
+Currently we are here:
 
 - ~650ns/op
 - ~96B/op
 - ~6 allocs/op
 
-Which sums up to parsing ~1.5 million messages per second with only one core of an i7-4790k.
+Which sums up to parsing ~1.5 million messages per second with only one core of an i7-4790k (not overclocked).
 
-The only thing in equinox that might slow down your bot are overused adapters.<br>
+In general equinox is rarely the bottleneck.<br>
+The only thing that might slow down your bot are overused adapters.<br>
 However: Since those penalties are self-imposed (by poor library usage) there's no way to fix that.
 
-For example: Shiro's core adapters bump the average message parsing to 0.05ms (50,000ns).<br>
-While this is still pretty fast it shows that **you should keep in mind that Adapters run in your bot's hottest execution path** and thus limit them to the most needed actions if you're planning to go big.
+Just always keep in mind that certain adapters (more on that topic below) run in your bot's hottest execution paths.
+Good examples for adapters that should NEVER contain much logic are `MESSAGE_PRE_ANALYZE` and `MESSAGE_ANALYZE`.
 
 ## Simplicity
 
-Hate your million-lines long code base that handles the `MESSAGE_CREATE` event?
+Hate your million lines long code base that handles the `MESSAGE_CREATE` event?
 
 Here's what it looks like with equinox:
 
@@ -44,11 +63,14 @@ func OnMessageCreate(session *discordgo.Session, message *discordgo.MessageCreat
 ## Adapters
 
 Equinox is built on, and deals with, adapters.
-Adapters are little functions that can intercept the message parsing proccess.
+Adapters are little functions that can intercept the message parsing proccess and many other things.
 This allows you to completely take over the parser stages or use the shipped stuff as a "drop-in core replacement".
 It's all up to you.
 
-Example to ignore messages from other bots:
+The goal is to combine ease of use with insane flexibility when required.<br>
+All of that while running at the highest possible performance.
+
+Example to ignore messages from other bots with a parser-adapter:
 ```go
 router.RegisterAdapter(equinox.MESSAGE_PRE_ANALYZE, func(msg *discordgo.Message) equinox.AdapterEvent {
     if msg.Author.Bot {
